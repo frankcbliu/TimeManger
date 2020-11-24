@@ -1,6 +1,19 @@
 // 'use strict'
 
-// import { app, BrowserWindow } from 'electron'
+let { menubar } = require('menubar')
+
+const winURL = process.env.NODE_ENV === 'development'
+  ? `http://localhost:9080`
+  : `file://${__dirname}/index.html`
+
+let mb = menubar({
+  'index': winURL,
+  // 设置 icon
+  'icon': 'static/icon/logo.png'
+})
+mb.on('ready', function ready () {
+  console.log('app is ready')
+})
 
 // /**
 //  * Set `__static` path to static files in production
@@ -11,9 +24,6 @@
 // }
 
 // let mainWindow
-// const winURL = process.env.NODE_ENV === 'development'
-//   ? `http://localhost:9080`
-//   : `file://${__dirname}/index.html`
 
 // function createWindow () {
 //   /**
@@ -45,16 +55,6 @@
 //     createWindow()
 //   }
 // })
-
-let { menubar } = require('menubar')
-
-let mb = menubar({
-  // 设置 icon
-  'icon': 'static/icon/logo.png'
-})
-mb.on('ready', function ready () {
-  console.log('app is ready')
-})
 
 /**
  * Auto Updater

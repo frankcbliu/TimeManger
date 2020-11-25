@@ -1,11 +1,13 @@
 // 'use strict'
 
 let { menubar } = require('menubar')
+let path = require('path')
 
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
 
+console.log(path.resolve('./static/icon/logo.png'))
 let mb = menubar({
   'index': winURL,
   // 设置 icon

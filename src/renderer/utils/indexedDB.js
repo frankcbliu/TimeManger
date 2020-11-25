@@ -112,18 +112,90 @@ export default {
   },
   /**
    * 获取所有主任务
-   * @param {boolean} isDone 是否完成
+   * @param {number} isDone 是否完成
    */
   getTaskByIsDone (isDone) {
     let objectStore = this.db.transaction(['task']).objectStore('task')
-    let request = objectStore.index('is_done').get(isDone)
+    let request = objectStore.index('is_done').getAll(isDone)
 
     return new Promise((resolve, reject) => {
       request.onerror = function (event) {
-        reject(new Error('事务失败'))
+        reject(new Error('获取全部主任务失败'))
       }
       request.onsuccess = function (event) {
         resolve(request.result || [])
+      }
+    })
+  },
+  /**
+   * 设置主任务is_done
+   * @param {*} id id
+   * @param {number} isDone is_done
+   */
+  setTaskIsDone (id, isDone) {
+    let objectStore = this.db.transaction(['task'], 'readwrite').objectStore('task')
+    let request = objectStore.get(id)
+
+    return new Promise((resolve, reject) => {
+      request.onerror = function (event) {
+        reject(new Error('根据id获取数据失败'))
+      }
+      request.onsuccess = function (event) {
+        var data = event.target.result
+        // 更新你想修改的数据
+        data['is_done'] = isDone
+        // 把更新过的对象放回数据库
+        var requestUpdate = objectStore.put(data)
+        requestUpdate.onerror = function (event) {
+          reject(new Error('更新数据失败'))
+        }
+        requestUpdate.onsuccess = function (event) {
+          resolve('数据更新成功')
+        }
+      }
+    })
+  },
+  /**
+   * 根据主任务id获取子任务
+   * @param {*} id id
+   */
+  getSubTaskById (id) {
+    let objectStore = this.db.transaction(['sub_task']).objectStore('sub_task')
+    let request = objectStore.index('id').getAll(id)
+    return new Promise((resolve, reject) => {
+      request.onerror = function (event) {
+        reject(new Error('根据主任务id获取子任务失败'))
+      }
+      request.onsuccess = function (event) {
+        resolve(request.result || [])
+      }
+    })
+  },
+  /**
+   * 设置子任务is_done
+   * @param {*} subId 子任务sub_id
+   * @param {*} isDone is_done
+   */
+  setSubTaskIsDone (subId, isDone) {
+    let objectStore = this.db.transaction(['sub_task'], 'readwrite').objectStore('sub_task')
+    let request = objectStore.get(subId)
+
+    return new Promise((resolve, reject) => {
+      request.onerror = function (event) {
+        reject(new Error('根据id获取数据失败'))
+      }
+      request.onsuccess = function (event) {
+        var data = event.target.result
+        // 更新你想修改的数据
+        data['is_done'] = isDone
+        // 把更新过的对象放回数据库
+        var requestUpdate = objectStore.put(data)
+        requestUpdate.onerror = function (event) {
+          reject(new Error('更新数据失败'))
+        }
+        requestUpdate.onsuccess = function (event) {
+          resolve('数据更新成功')
+        }
       }
     })
   }

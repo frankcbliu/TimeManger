@@ -18,47 +18,96 @@
         @change="createTask"
       ></el-input>
       <!-- 未完成的任务 -->
-      <template v-if="taskLists1.length > 0">
+      <template v-if="notDoneTasks.length > 0">
         <el-checkbox-group
-          v-model="checkTaskList1"
-          v-for="item in taskLists1"
-          :key="item.id"
+          v-model="checkTasks"
+          v-for="item in notDoneTasks"
+          :key="`notDoneTasks${item.id}`"
           class="marginBottom"
         >
           <el-checkbox
             :label="item.id"
             @change="
-              (status) => {
-                handleCheckedTaskList(item.id, status);
+              (isDone) => {
+                handleCheckedTask(item.id, +isDone, item.subTasks);
               }
             "
-            >{{ item.taskName }}</el-checkbox
-          >
+            >{{ item.name }}</el-checkbox>
+          <div class="subTask">
+            <el-checkbox-group
+              v-model="checkSubTasks"
+              v-for="subItem in item.subTasks"
+              :key="`subtask${subItem.sub_id}`"
+              class= "marginBottom"
+            >
+              <el-checkbox
+                :label="subItem.sub_id"
+                @change="
+                  (isDone) => {
+                    handleCheckedSubTask(subItem.sub_id, +isDone);
+                  }
+                "
+                >{{ subItem.sub_name }}</el-checkbox
+              >
+            </el-checkbox-group>
+            <el-input
+              v-model="newSubTask[item.id]"
+              placeholder="添加新子任务"
+              class="marginBottom"
+              size="small"
+              @change="(newSubTask) => createSubTask(newSubTask, item.id, item.name)"
+            ></el-input>
+          </div>
         </el-checkbox-group>
       </template>
       <!-- 已完成的任务 -->
-      <template v-if="taskLists2.length > 0">
-        <div @click="clickShowTaskList2" class="showTaskList2 marginBottom">
-          <i class="el-icon-arrow-up" v-if="isShowTaskList2"></i>
+      <template v-if="doneTasks.length > 0">
+        <div @click="clickShowDoneTasks" class="showDoneTasks marginBottom">
+          <i class="el-icon-arrow-up" v-if="isShowDoneTasks"></i>
           <i class="el-icon-arrow-down" v-else></i>
           完成的任务
         </div>
-        <template v-if="isShowTaskList2">
+        <template v-if="isShowDoneTasks">
           <el-checkbox-group
-            v-model="checkTaskList2"
-            v-for="item in taskLists2"
-            :key="item.id"
+            v-model="checkTasks"
+            v-for="(item, index) in doneTasks"
+            :key="`doneTasks${index}`"
             class="marginBottom"
           >
             <el-checkbox
               :label="item.id"
               @change="
-                (status) => {
-                  handleCheckedTaskList(item.id, status);
+                (isDone) => {
+                  handleCheckedTask(item.id, +isDone);
                 }
               "
-              >{{ item.taskName }}</el-checkbox
+              >{{ item.name }}</el-checkbox
             >
+            <div class="subTask">
+            <el-checkbox-group
+              v-model="checkSubTasks"
+              v-for="subItem in item.subTasks"
+              :key="`subtask${subItem.sub_id}`"
+              class= "marginBottom"
+            >
+              <el-checkbox
+                :label="subItem.sub_id"
+                @change="
+                  (isDone) => {
+                    handleCheckedSubTask(subItem.sub_id, +isDone);
+                  }
+                "
+                >{{ subItem.sub_name }}</el-checkbox
+              >
+            </el-checkbox-group>
+            <el-input
+              v-model="newSubTask[item.id]"
+              placeholder="添加新子任务"
+              class="marginBottom"
+              size="small"
+              @change="(newSubTask) => createSubTask(newSubTask, item.id, item.name, item.is_done)"
+            ></el-input>
+          </div>
           </el-checkbox-group>
         </template>
       </template>
@@ -85,54 +134,92 @@ export default {
     return {
       activeName: 'one',
       store: null,
+      isShowDoneTasks: false,
+      checkTasks: [], // 主任务选中的id
+      checkSubTasks: [],
+      notDoneTasks: [], // 未完成的任务
+      doneTasks: [], // 已完成的任务
       newTask: '',
-      isShowTaskList2: false,
-      checkTaskList1: [],
-      checkTaskList2: [3, 4], // 默认选择
-      taskLists1: [ // 未完成的任务
-        {
-          id: 1,
-          taskName: '学electron1',
-          estimatedNum: null, // 预计番茄数
-          completedNum: null, // 已完成番茄数
-          remarks: null
-        },
-        {
-          id: 2,
-          taskName: '学electron学呀学不会1',
-          estimatedNum: 3, // 预计番茄数
-          completedNum: 1, // 已完成番茄数
-          remarks: '弃疗'
-        }
-      ],
-      taskLists2: [ // 已完成的任务
-        {
-          id: 3,
-          taskName: '学electron2',
-          estimatedNum: null, // 预计番茄数
-          completedNum: null, // 已完成番茄数
-          remarks: null
-        },
-        {
-          id: 4,
-          taskName: '学electron学呀学不会2',
-          estimatedNum: 3, // 预计番茄数
-          completedNum: 3, // 已完成番茄数
-          remarks: '弃疗'
-        }
-      ]
+      newSubTask: []
     }
   },
   async mounted () {
     await db.initDB()
-    await this.init()
+    this.init()
   },
   methods: {
     async init () {
-      let doneTasks = await db.getTaskByIsDone(1)
-      let notDoneTasks = await db.getTaskByIsDone(0)
-      console.log(doneTasks)
-      console.log(notDoneTasks)
+      this.checkNotDoneTasks = []
+      this.checkDoneTasks = []
+      this.newTask = ''
+      this.newSubTask = []
+      this.tasks = await db.getAllTask()
+
+      let notDoneTasks = []
+      let doneTasks = []
+      let checkTasks = []
+      let checkSubTasks = []
+      for (let item of this.tasks) {
+        item.subTasks = await db.getSubTaskById(item.id) // 获取子任务
+        for (let subItem of item.subTasks) {
+          if (subItem.is_done) {
+            checkSubTasks.push(subItem.sub_id) // 选中已完成的任务
+          }
+        }
+        if (item.is_done) {
+          doneTasks.push(item)
+          checkTasks.push(item.id)
+        } else {
+          notDoneTasks.push(item)
+        }
+      }
+      this.doneTasks = doneTasks
+      this.notDoneTasks = notDoneTasks
+      this.checkTasks = checkTasks
+      this.checkSubTasks = checkSubTasks
+      console.log(this.notDoneTasks)
+      console.log(this.doneTasks)
+    },
+    clickShowDoneTasks () { // 是否显示已完成的任务
+      this.isShowDoneTasks = !this.isShowDoneTasks
+    },
+    createTask (newTask) { // 创建主任务
+      if (this.newTask) {
+        db.createTask({
+          'name': newTask,
+          'is_done': 0,
+          'sum_time': 0
+        })
+        this.init()
+      }
+    },
+    createSubTask (newSubTask, id, name, isDone) { // 创建子任务
+      if (this.newSubTask) {
+        if (isDone) { // 如果主任务已经完成，置为未完成
+          db.setTaskIsDone(id, 0)
+        }
+        db.createSubTask({
+          'id': id,
+          'name': name,
+          'sub_name': newSubTask,
+          'is_done': 0,
+          'sum_time': 0
+        })
+        this.init()
+      }
+    },
+    async handleCheckedTask (id, isDone, subTasks) { // 更改主任务状态
+      await db.setTaskIsDone(id, isDone)
+      if (isDone) { // 如果已完成，子任务默认为全部完成
+        for (let subItem of subTasks) {
+          await db.setSubTaskIsDone(subItem.sub_id, 1)
+        }
+      }
+      this.init()
+    },
+    async handleCheckedSubTask (subId, isDone) { // 更改子任务状态
+      await db.setSubTaskIsDone(subId, isDone)
+      this.init()
     },
     openSetting () {
       console.log('open setting')
@@ -148,39 +235,12 @@ export default {
       // menu.append( ... )
       // 展示出来
       menu.popup(remote.getCurrentWindow())
-    },
-    clickShowTaskList2 () {
-      this.isShowTaskList2 = !this.isShowTaskList2
-    },
-    handleCheckedTaskList (id, status) { // 更改任务状态
-      console.log(id)
-      console.log(status)
-      // todo: 将id对应的任务状态置为相应状态，并重新获取任务；
-    },
-    async createTask () {
-      db.createTask({
-        'name': this.newTask,
-        'is_done': 0,
-        'sum_time': 0
-      })
-      console.log(await db.getAllTask())
     }
   }
 }
 </script>
 
-<style>
-@import url("https://fonts.googleapis.com/css?family=Source+Sans+Pro");
-
-* {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: "Source Sans Pro", sans-serif;
-}
+<style scoped>
 .marginBottom {
   margin-bottom: 10px;
 }
@@ -207,15 +267,23 @@ body {
   height: 80%;
   padding: 10px 20px;
 }
-.showTaskList2 {
+.showDoneTasks {
   cursor: pointer;
 }
-
+.subTask {
+  padding: 10px 0 10px 20px;
+}
 #bottom {
   height: 8%;
   /* background-color: green; */
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+</style>
+
+<style>
+.el-checkbox__label {
+  font-size: 16px !important;
 }
 </style>

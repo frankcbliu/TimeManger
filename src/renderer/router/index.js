@@ -11,6 +11,11 @@ export default new Router({
       component: require('@/components/MenuBar').default
     },
     {
+      path: '/setting',
+      name: 'setting',
+      component: require('@/components/Setting.vue').default
+    },
+    {
       path: '*',
       redirect: '/'
     }

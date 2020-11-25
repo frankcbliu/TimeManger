@@ -115,8 +115,8 @@
     <div id="mid" v-show="activeName === 'two'">two</div>
     <div id="bottom">
       <div></div>
-      <span style="margin: 1%; font-size: 25px" @click="openSetting"
-        ><i class="el-icon-setting"></i>
+      <span style="margin: 1%; font-size: 25px" @click="openSetting">
+        <i class="el-icon-setting" style="color: #606266"></i>
       </span>
     </div>
   </div>
@@ -226,11 +226,18 @@ export default {
       // 右键菜单
       const menu = new Menu()
       menu.append(new MenuItem({
-        label: '退出',
+        label: '偏好设置',
         click: function () {
-          ipcRenderer.send('quit')
+          ipcRenderer.send('setting')
         }
       }))
+      menu.append(new MenuItem({
+        label: '退出',
+        click: function () {
+          ipcRenderer.send('exit')
+        }
+      }))
+
       // 第二个菜单
       // menu.append( ... )
       // 展示出来
@@ -245,11 +252,6 @@ export default {
   margin-bottom: 10px;
 }
 #wrapper {
-  background: radial-gradient(
-    ellipse at top left,
-    rgba(255, 255, 255, 1) 40%,
-    rgba(229, 229, 229, 0.9) 100%
-  );
   height: 100vh;
   width: 100vw;
 }
@@ -275,7 +277,6 @@ export default {
 }
 #bottom {
   height: 8%;
-  /* background-color: green; */
   display: flex;
   align-items: center;
   justify-content: space-between;

@@ -1,5 +1,6 @@
 // 'use strict'
-const { app, ipcMain } = require('electron')
+const console = require('console')
+const { app, ipcMain, BrowserWindow } = require('electron')
 let { menubar } = require('menubar')
 
 const winURL = process.env.NODE_ENV === 'development'
@@ -21,11 +22,51 @@ let mb = menubar({
     }
   }
 })
+var win
+function openSettingWindow () {
+  win = new BrowserWindow({
+    title: 'Prefrence',
+    height: 400,
+    width: 600,
+    x: 100,
+    y: 100,
+    useContentSize: true,
+    // resizable: false,
+    webPreferences: {
+      nodeIntegration: true,
+      enableRemoteModule: true
+    }
+  })
 
-console.log(mb.getOption('browserWindow'))
+  win.loadURL(winURL + '#/setting').then(() => {
+    // win.setTitle('Prefrence')
+  })
+  win.on('closed', () => { win = null })
+}
 
 mb.on('ready', function ready () {
   console.log('app is ready')
+})
+
+// 取消开机自动启动
+ipcMain.on('cancelAutoStart', () => {
+  app.setLoginItemSettings({
+    openAtLogin: false
+  })
+  console.log('当前自动开机状态: ', app.getLoginItemSettings('openAtLogin'))
+})
+
+// 开机自动启动
+ipcMain.on('autoStart', () => {
+  app.setLoginItemSettings({
+    openAtLogin: true
+  })
+  console.log('当前自动开机状态: ', app.getLoginItemSettings('openAtLogin'))
+})
+
+// 开启配置选项
+ipcMain.on('setting', () => {
+  openSettingWindow()
 })
 
 // 退出程序，销毁窗口

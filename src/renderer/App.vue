@@ -5,14 +5,14 @@
 </template>
 
 <script>
-  export default {
-    name: 'time_manager'
-  }
+export default {
+  name: 'time_manager'
+}
 </script>
 
 <style>
-  /* CSS */
-  @import url("https://fonts.googleapis.com/css?family=Source+Sans+Pro");
+/* CSS */
+@import url("https://fonts.googleapis.com/css?family=Source+Sans+Pro");
 
 * {
   box-sizing: border-box;
@@ -21,6 +21,7 @@
 }
 
 body {
+  background-color: #f2f1f2;
   margin: 0;
   font-family: "Source Sans Pro", sans-serif;
 }

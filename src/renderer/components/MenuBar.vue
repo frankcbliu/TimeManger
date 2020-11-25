@@ -11,11 +11,29 @@
       </el-radio-group>
     </div>
     <div id="mid" v-show="activeName === 'one'">
-      <el-input v-model="newTask" placeholder="添加新任务" class="marginBottom"></el-input>
+      <el-input
+        v-model="newTask"
+        placeholder="添加新任务"
+        class="marginBottom"
+        @change="createTask"
+      ></el-input>
       <!-- 未完成的任务 -->
       <template v-if="taskLists1.length > 0">
-        <el-checkbox-group v-model="checkTaskList1" v-for="item in taskLists1" :key="item.id" class="marginBottom">
-          <el-checkbox :label="item.id" @change="((status) => { handleCheckedTaskList(item.id, status) })">{{ item.taskName }}</el-checkbox>
+        <el-checkbox-group
+          v-model="checkTaskList1"
+          v-for="item in taskLists1"
+          :key="item.id"
+          class="marginBottom"
+        >
+          <el-checkbox
+            :label="item.id"
+            @change="
+              (status) => {
+                handleCheckedTaskList(item.id, status);
+              }
+            "
+            >{{ item.taskName }}</el-checkbox
+          >
         </el-checkbox-group>
       </template>
       <!-- 已完成的任务 -->
@@ -26,17 +44,28 @@
           完成的任务
         </div>
         <template v-if="isShowTaskList2">
-          <el-checkbox-group v-model="checkTaskList2" v-for="item in taskLists2" :key="item.id" class="marginBottom">
-            <el-checkbox :label="item.id" @change="((status) => { handleCheckedTaskList(item.id, status) })">{{ item.taskName }}</el-checkbox>
+          <el-checkbox-group
+            v-model="checkTaskList2"
+            v-for="item in taskLists2"
+            :key="item.id"
+            class="marginBottom"
+          >
+            <el-checkbox
+              :label="item.id"
+              @change="
+                (status) => {
+                  handleCheckedTaskList(item.id, status);
+                }
+              "
+              >{{ item.taskName }}</el-checkbox
+            >
           </el-checkbox-group>
         </template>
       </template>
     </div>
-    <div id="mid" v-show="activeName === 'two'">
-      two
-    </div>
+    <div id="mid" v-show="activeName === 'two'">two</div>
     <div id="bottom">
-      sss
+      <div></div>
       <span style="margin: 1%; font-size: 25px" @click="openSetting"
         ><i class="el-icon-setting"></i>
       </span>
@@ -45,12 +74,10 @@
 </template>
 
 <script>
+import db from '../utils/indexedDB.js'
 // 需要用到 electron
-const { remote } = require('electron')
+const { remote, ipcRenderer } = require('electron')
 const { Menu, MenuItem } = remote
-const { ipcRenderer } = require('electron')
-
-// const indexedDB = window.indexedDB || window.webkitindexedDB || window.msIndexedDB || mozIndexedDB
 
 export default {
   name: 'menu-bar',
@@ -97,10 +124,11 @@ export default {
     }
   },
   mounted () {
+    var request = window.indexedDB.open('TimeManager')
     // const request = indexedDB.open('timeManger')
-    // request.onerror = function (event) {
-    //   console.error('IndexedDB数据库打开错误')
-    // }
+    request.onerror = function (event) {
+      console.error('IndexedDB数据库打开错误')
+    }
     // request.onupgradeneeded = function (event) {
     //   const db = event.target.result
     //   if (!db.objectStoreNames.contains('taskList')) {
@@ -137,6 +165,14 @@ export default {
       console.log(id)
       console.log(status)
       // todo: 将id对应的任务状态置为相应状态，并重新获取任务；
+    },
+    createTask () {
+      db.createTask({
+        'name': this.newTask,
+        'done': false,
+        'sum_time': 0
+      })
+      db.getAllTask()
     }
   }
 }
@@ -186,10 +222,9 @@ body {
 
 #bottom {
   height: 8%;
-  background-color: green;
+  /* background-color: green; */
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
-
 </style>

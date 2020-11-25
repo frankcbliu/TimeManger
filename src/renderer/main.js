@@ -7,6 +7,8 @@ import store from './store'
 
 import Element from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
+import db from './utils/indexedDB.js'
+
 Vue.use(Element)
 
 if (!process.env.IS_WEB) Vue.use(require('vue-electron'))
@@ -20,3 +22,6 @@ new Vue({
   store,
   template: '<App/>'
 }).$mount('#app')
+
+// 初始化数据库
+db.initDB()

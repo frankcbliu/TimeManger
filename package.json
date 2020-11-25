@@ -19,8 +19,8 @@
     "postinstall": "npm run lint:fix"
   },
   "build": {
-    "productName": "time_manager",
-    "appId": "com.example.yourapp",
+    "productName": "TimeManager",
+    "appId": "com.time.manager",
     "directories": {
       "output": "build"
     },
@@ -47,9 +47,6 @@
     },
     "win": {
       "icon": "build/icons/icon.ico"
-    },
-    "linux": {
-      "icon": "build/icons"
     }
   },
   "dependencies": {
@@ -79,8 +76,8 @@
     "css-loader": "^0.28.11",
     "del": "^3.0.0",
     "devtron": "^1.4.0",
-    "electron": "^2.0.4",
-    "electron-builder": "^20.19.2",
+    "electron": "^11.0.3",
+    "electron-builder": "^22.7.0",
     "electron-debug": "^1.5.0",
     "electron-devtools-installer": "^2.2.4",
     "eslint": "^4.19.1",

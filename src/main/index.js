@@ -1,18 +1,41 @@
 // 'use strict'
-
+const { app, ipcMain } = require('electron')
 let { menubar } = require('menubar')
 
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
   : `file://${__dirname}/index.html`
 
+const iconURL = process.env.NODE_ENV === 'development'
+  ? `static/icon/logo.png`
+  : `${__dirname}/static/icon/logo.png`
+
 let mb = menubar({
   'index': winURL,
   // 设置 icon
-  'icon': 'static/icon/logo.png'
+  'icon': iconURL,
+  'browserWindow': {
+    'webPreferences': {
+      'nodeIntegration': true,
+      'enableRemoteModule': true
+    }
+  }
 })
+
+console.log(mb.getOption('browserWindow'))
+
 mb.on('ready', function ready () {
   console.log('app is ready')
+})
+
+// 退出程序，销毁窗口
+ipcMain.on('quit', () => {
+  app.quit()
+})
+
+// 强制退出
+ipcMain.on('exit', () => {
+  app.exit()
 })
 
 // /**

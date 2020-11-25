@@ -1,14 +1,13 @@
 <template>
   <div id="wrapper">
-    <div id="top">
-      sss
-    </div>
-    <div id="mid">
-      sss
-    </div>
+    <div id="top">sss</div>
+    <div id="mid">sss</div>
 
     <div id="bottom">
       sss
+      <span style="margin: 1%; font-size: 25px" @click="openSetting"
+        ><i class="el-icon-setting"></i>
+      </span>
     </div>
 
     <!--     
@@ -26,6 +25,11 @@
 </template>
 
 <script>
+// 需要用到 electron
+const { remote } = require('electron')
+const { Menu, MenuItem } = remote
+const { ipcRenderer } = require('electron')
+
 export default {
   name: 'menu-bar',
   data () {
@@ -36,6 +40,21 @@ export default {
   methods: {
     handleClick (tab, event) {
       console.log(tab, event)
+    },
+    openSetting () {
+      console.log('open setting')
+      // 右键菜单
+      const menu = new Menu()
+      menu.append(new MenuItem({
+        label: '退出',
+        click: function () {
+          ipcRenderer.send('quit')
+        }
+      }))
+      // 第二个菜单
+      // menu.append( ... )
+      // 展示出来
+      menu.popup(remote.getCurrentWindow())
     }
   }
 }
@@ -78,5 +97,8 @@ body {
 #bottom {
   height: 8%;
   background-color: green;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 </style>

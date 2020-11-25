@@ -123,25 +123,16 @@ export default {
       ]
     }
   },
-  mounted () {
-    var request = window.indexedDB.open('TimeManager')
-    // const request = indexedDB.open('timeManger')
-    request.onerror = function (event) {
-      console.error('IndexedDB数据库打开错误')
-    }
-    // request.onupgradeneeded = function (event) {
-    //   const db = event.target.result
-    //   if (!db.objectStoreNames.contains('taskList')) {
-    //     let objectStore = db.createObjectStore('person', { autoIncrement: true })
-    //   }
-    // }
-    // request.onsuccess = function () {
-    //   console.log('succeeded')
-    // }
+  async mounted () {
+    await db.initDB()
+    await this.init()
   },
   methods: {
-    handleClick (tab, event) {
-      console.log(tab, event)
+    async init () {
+      let doneTasks = await db.getTaskByIsDone(1)
+      let notDoneTasks = await db.getTaskByIsDone(0)
+      console.log(doneTasks)
+      console.log(notDoneTasks)
     },
     openSetting () {
       console.log('open setting')
@@ -166,13 +157,13 @@ export default {
       console.log(status)
       // todo: 将id对应的任务状态置为相应状态，并重新获取任务；
     },
-    createTask () {
+    async createTask () {
       db.createTask({
         'name': this.newTask,
-        'done': false,
+        'is_done': 0,
         'sum_time': 0
       })
-      db.getAllTask()
+      console.log(await db.getAllTask())
     }
   }
 }

@@ -7,7 +7,7 @@ import store from './store'
 
 import Element from 'element-ui'
 import 'element-ui/lib/theme-chalk/index.css'
-import db from './utils/indexedDB.js'
+// import db from './utils/indexedDB.js'
 
 Vue.use(Element)
 
@@ -24,4 +24,4 @@ new Vue({
 }).$mount('#app')
 
 // 初始化数据库
-db.initDB()
+// db.initDB()

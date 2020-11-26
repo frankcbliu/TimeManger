@@ -35,19 +35,18 @@ var launch = new AutoLaunch({
   path: process.execPath // 当前运行程序或改成绝对路径
 })
 
-function updateAutoLaunch () {
-  let isAutoLaunch = storage.getItem('auto-launch')
-  console.log('当前开机自启配置：', isAutoLaunch)
+// 更新开机自动启动配置
+function updateAutoLaunch (isAutoLaunch) {
   if (isAutoLaunch) { // 开机自启
     launch.enable()
     launch.isEnabled().then((isEnabled) => {
       if (isEnabled) {
-        console.log('当前自动开机状态: ', app.getLoginItemSettings().openAtLogin)
+        console.log('修改成功，当前开机自启状态: ', app.getLoginItemSettings().openAtLogin)
         return
       }
-      console.error('重试再次开启....')
+      console.error('重试再次开启....', app.getLoginItemSettings().openAtLogin)
       launch.enable()
-      console.log('当前自动开机状态: ', app.getLoginItemSettings().openAtLogin)
+      console.log('修改成功，当前开机自启状态: ', app.getLoginItemSettings().openAtLogin)
     }).catch((err) => {
       console.error(err)
     })
@@ -55,22 +54,28 @@ function updateAutoLaunch () {
     launch.disable()
     launch.isEnabled().then((isEnabled) => {
       if (!isEnabled) {
-        console.log('当前自动开机状态: ', app.getLoginItemSettings().openAtLogin)
+        console.log('修改成功，当前开机自启状态: ', app.getLoginItemSettings().openAtLogin)
         return
       }
-      console.error('重试再次关闭....')
+      console.error('重试再次关闭....', app.getLoginItemSettings().openAtLogin)
       launch.disable()
-      console.log('当前自动开机状态: ', app.getLoginItemSettings().openAtLogin)
+      console.log('修改成功，当前开机自启状态: ', app.getLoginItemSettings().openAtLogin)
     }).catch((err) => {
       console.error(err)
     })
   }
 }
 
-// 当前配置与开机配置不一致时，进行修改
-if ((app.getLoginItemSettings().openAtLogin) !== storage.getItem('auto-launch')) {
-  console.log('当前自启配置：', app.getLoginItemSettings().openAtLogin, ' 缓存配置：', storage.getItem('auto-launch'))
-  updateAutoLaunch()
+// 检测是否需要更新自启配置
+function checkAutoLaunch () {
+  let curLaunchConfig = app.getLoginItemSettings().openAtLogin
+  let fileLaunchConfig = storage.getItem('auto-launch')
+
+  // 当前配置与开机配置不一致时，进行修改
+  console.log(storage.getAll(), '\n\n', '当前自启配置：', curLaunchConfig, ' 缓存配置：', fileLaunchConfig)
+  if (curLaunchConfig !== fileLaunchConfig) {
+    updateAutoLaunch(fileLaunchConfig)
+  }
 }
 
 var win
@@ -94,10 +99,12 @@ function openSettingWindow () {
   })
   win.on('closed', () => {
     win = null
-    // 监测到窗口关闭时，才修改开机启动项
-    updateAutoLaunch()
+    // 监测到窗口关闭时，再次检测
+    checkAutoLaunch()
   })
 }
+// 启动程序时检测一遍
+checkAutoLaunch()
 
 mb.on('ready', function ready () {
   console.log('app is ready')

@@ -43,7 +43,7 @@
 </template>
 
 <script >
-const { ipcRenderer } = require('electron')
+import storage from '../utils/storage.js'
 
 export default {
   name: 'setting',
@@ -56,14 +56,18 @@ export default {
     }
   },
   mounted () {
+    this.autoLaunch = storage.getItem('auto-launch')
+    console.log('当前状态：', this.autoLaunch)
   },
   methods: {
     autoStart () {
+      console.log(this.autoLaunch)
       if (this.autoLaunch) {
-        ipcRenderer.send('autoStart')
+        storage.setItem('auto-launch', true)
       } else {
-        ipcRenderer.send('cancelAutoStart')
+        storage.setItem('auto-launch', false)
       }
+      console.log(storage.getAll())
     }
   }
 }

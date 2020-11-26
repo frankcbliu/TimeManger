@@ -1,7 +1,10 @@
 // 'use strict'
+import storage from '../renderer/utils/storage.js'
+
 const console = require('console')
 const { app, ipcMain, BrowserWindow } = require('electron')
 let { menubar } = require('menubar')
+const AutoLaunch = require('auto-launch')
 
 const winURL = process.env.NODE_ENV === 'development'
   ? `http://localhost:9080`
@@ -22,6 +25,54 @@ let mb = menubar({
     }
   }
 })
+
+// 隐藏 Dock 栏
+app.dock.hide()
+
+// 开机自动登录
+var launch = new AutoLaunch({
+  name: 'TimeManager',
+  path: process.execPath // 当前运行程序或改成绝对路径
+})
+
+function updateAutoLaunch () {
+  let isAutoLaunch = storage.getItem('auto-launch')
+  console.log('当前开机自启配置：', isAutoLaunch)
+  if (isAutoLaunch) { // 开机自启
+    launch.enable()
+    launch.isEnabled().then((isEnabled) => {
+      if (isEnabled) {
+        console.log('当前自动开机状态: ', app.getLoginItemSettings().openAtLogin)
+        return
+      }
+      console.error('重试再次开启....')
+      launch.enable()
+      console.log('当前自动开机状态: ', app.getLoginItemSettings().openAtLogin)
+    }).catch((err) => {
+      console.error(err)
+    })
+  } else { // 取消开机自启
+    launch.disable()
+    launch.isEnabled().then((isEnabled) => {
+      if (!isEnabled) {
+        console.log('当前自动开机状态: ', app.getLoginItemSettings().openAtLogin)
+        return
+      }
+      console.error('重试再次关闭....')
+      launch.disable()
+      console.log('当前自动开机状态: ', app.getLoginItemSettings().openAtLogin)
+    }).catch((err) => {
+      console.error(err)
+    })
+  }
+}
+
+// 当前配置与开机配置不一致时，进行修改
+if ((app.getLoginItemSettings().openAtLogin) !== storage.getItem('auto-launch')) {
+  console.log('当前自启配置：', app.getLoginItemSettings().openAtLogin, ' 缓存配置：', storage.getItem('auto-launch'))
+  updateAutoLaunch()
+}
+
 var win
 function openSettingWindow () {
   win = new BrowserWindow({
@@ -41,27 +92,15 @@ function openSettingWindow () {
   win.loadURL(winURL + '#/setting').then(() => {
     // win.setTitle('Prefrence')
   })
-  win.on('closed', () => { win = null })
+  win.on('closed', () => {
+    win = null
+    // 监测到窗口关闭时，才修改开机启动项
+    updateAutoLaunch()
+  })
 }
 
 mb.on('ready', function ready () {
   console.log('app is ready')
-})
-
-// 取消开机自动启动
-ipcMain.on('cancelAutoStart', () => {
-  app.setLoginItemSettings({
-    openAtLogin: false
-  })
-  console.log('当前自动开机状态: ', app.getLoginItemSettings('openAtLogin'))
-})
-
-// 开机自动启动
-ipcMain.on('autoStart', () => {
-  app.setLoginItemSettings({
-    openAtLogin: true
-  })
-  console.log('当前自动开机状态: ', app.getLoginItemSettings('openAtLogin'))
 })
 
 // 开启配置选项

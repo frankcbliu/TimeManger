@@ -12,12 +12,13 @@
     </div>
     <div id="mid" v-show="activeName === 'one'">
       <el-input
+        style="menu-input"
         v-model="newTask"
         placeholder="添加新任务"
         class="newTaskInput"
         @change="createTask"
         :class="{ scroll: isScroll }"
-      ></el-input>      
+      ></el-input>
       <div class="task" ref="task">
         <!-- 未完成的任务 -->
         <template v-if="notDoneTasks.length > 0">
@@ -28,21 +29,24 @@
             class="marginBottom"
           >
             <el-checkbox
+              style="zoom: 120%"
               :label="item.id"
               @change="
                 (isDone) => {
                   handleCheckedTask(item.id, +isDone, item.subTasks);
                 }
               "
-              >{{ item.name }}</el-checkbox>
+              >{{ item.name }}</el-checkbox
+            >
             <div class="subTask">
               <el-checkbox-group
                 v-model="checkSubTasks"
                 v-for="subItem in item.subTasks"
                 :key="`subtask${subItem.sub_id}`"
-                class= "marginBottom"
+                class="marginBottom"
               >
                 <el-checkbox
+                  style="zoom: 115%"
                   :label="subItem.sub_id"
                   @change="
                     (isDone) => {
@@ -57,7 +61,9 @@
                 placeholder="添加新子任务"
                 class="marginBottom"
                 size="small"
-                @change="(newSubTask) => createSubTask(newSubTask, item.id, item.name)"
+                @change="
+                  (newSubTask) => createSubTask(newSubTask, item.id, item.name)
+                "
               ></el-input>
             </div>
           </el-checkbox-group>
@@ -86,35 +92,42 @@
                 >{{ item.name }}</el-checkbox
               >
               <div class="subTask">
-              <el-checkbox-group
-                v-model="checkSubTasks"
-                v-for="subItem in item.subTasks"
-                :key="`subtask${subItem.sub_id}`"
-                class= "marginBottom"
-              >
-                <el-checkbox
-                  :label="subItem.sub_id"
-                  @change="
-                    (isDone) => {
-                      handleCheckedSubTask(subItem.sub_id, +isDone);
-                    }
-                  "
-                  >{{ subItem.sub_name }}</el-checkbox
+                <el-checkbox-group
+                  v-model="checkSubTasks"
+                  v-for="subItem in item.subTasks"
+                  :key="`subtask${subItem.sub_id}`"
+                  class="marginBottom"
                 >
-              </el-checkbox-group>
-              <el-input
-                v-model="newSubTask[item.id]"
-                placeholder="添加新子任务"
-                class="marginBottom"
-                size="small"
-                @change="(newSubTask) => createSubTask(newSubTask, item.id, item.name, item.is_done)"
-              ></el-input>
-            </div>
+                  <el-checkbox
+                    :label="subItem.sub_id"
+                    @change="
+                      (isDone) => {
+                        handleCheckedSubTask(subItem.sub_id, +isDone);
+                      }
+                    "
+                    >{{ subItem.sub_name }}</el-checkbox
+                  >
+                </el-checkbox-group>
+                <el-input
+                  v-model="newSubTask[item.id]"
+                  placeholder="添加新子任务"
+                  class="marginBottom"
+                  size="small"
+                  @change="
+                    (newSubTask) =>
+                      createSubTask(
+                        newSubTask,
+                        item.id,
+                        item.name,
+                        item.is_done
+                      )
+                  "
+                ></el-input>
+              </div>
             </el-checkbox-group>
           </template>
         </template>
       </div>
-     
     </div>
     <div id="mid" v-show="activeName === 'two'">two</div>
     <div id="bottom">
@@ -279,6 +292,9 @@ export default {
 #mid {
   height: 82%;
 }
+
+
+
 .newTaskInput {
   height: 13%;
   display: flex;
@@ -286,7 +302,7 @@ export default {
   padding: 0 20px;
 }
 .scroll {
-  box-shadow: 0 3px 10px 0 rgba(0, 0, 0, .12);
+  box-shadow: 0 3px 10px 0 rgba(0, 0, 0, 0.12);
 }
 .task {
   padding: 10px 20px;
@@ -306,10 +322,21 @@ export default {
   justify-content: space-between;
   border-top: 1px solid #ddd;
 }
+
+.menu-input {
+  background-color: #f1f2f1;
+  font-size: 20px;
+}
 </style>
 
 <style>
 .el-checkbox__label {
   font-size: 16px !important;
+}
+.newTaskInput > .el-input__inner {
+  font-size: 25px;
+  padding-top: 3px;
+  padding-left: 6px;
+  padding-bottom: 3px;
 }
 </style>

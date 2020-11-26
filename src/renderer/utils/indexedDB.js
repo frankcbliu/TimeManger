@@ -8,6 +8,7 @@ export default {
   indexedDB: window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB,
 
   db: null,
+
   /**
    * 初始化数据库
    */
@@ -72,12 +73,17 @@ export default {
 
     // 创建数据库表
   },
+
   // 往指定数据表中添加数据
   db_add (tableName, item) {
     this.db.transaction([tableName], 'readwrite')
       .objectStore(tableName)
       .add(item)
   },
+
+  /// ///////////////////////////////////////////////////////////////////
+  /// /////////////////////////    创建操作    ///////////////////////////
+  /// ///////////////////////////////////////////////////////////////////
 
   // 创建主任务
   createTask (data) {
@@ -93,6 +99,50 @@ export default {
   createClock (data) {
     this.db_add('clock', data)
   },
+
+  /// ///////////////////////////////////////////////////////////////////
+  /// /////////////////////////    删除操作    ///////////////////////////
+  /// ///////////////////////////////////////////////////////////////////
+
+  /**
+   * 删除子任务
+   * @param {Number} subId
+   */
+  deleteSubTask (subId) {
+    let objectStore = this.db.transaction(['sub_task'], 'readwrite').objectStore('sub_task')
+    let request = objectStore.delete(subId)
+
+    return new Promise((resolve, reject) => {
+      request.onerror = function (event) {
+        reject(new Error('根据 subID 删除子任务失败'))
+      }
+      request.onsuccess = function (event) {
+        resolve('删除成功！')
+      }
+    })
+  },
+
+  /**
+   * 删除主任务
+   * @param {Number} id
+   */
+  deleteTask (id) {
+    let objectStore = this.db.transaction(['task'], 'readwrite').objectStore('task')
+    let request = objectStore.delete(id)
+
+    return new Promise((resolve, reject) => {
+      request.onerror = function (event) {
+        reject(new Error('根据id删除数据失败'))
+      }
+      request.onsuccess = function (event) {
+        resolve('删除成功！')
+      }
+    })
+  },
+
+  /// ///////////////////////////////////////////////////////////////////
+  /// /////////////////////////    查询操作    ///////////////////////////
+  /// ///////////////////////////////////////////////////////////////////
 
   /**
    * 获取所有主任务
@@ -110,9 +160,10 @@ export default {
       }
     })
   },
+
   /**
-   * 获取所有主任务
-   * @param {number} isDone 是否完成
+   * 根据完成情况获取主任务
+   * @param {Number} isDone 是否完成
    */
   getTaskByIsDone (isDone) {
     let objectStore = this.db.transaction(['task']).objectStore('task')
@@ -127,9 +178,93 @@ export default {
       }
     })
   },
+
+  /**
+   * 根据主任务id获取子任务
+   * @param {Number} id id
+   */
+  getSubTaskById (id) {
+    let objectStore = this.db.transaction(['sub_task']).objectStore('sub_task')
+    let request = objectStore.index('id').getAll(id)
+    return new Promise((resolve, reject) => {
+      request.onerror = function (event) {
+        reject(new Error('根据主任务id获取子任务失败'))
+      }
+      request.onsuccess = function (event) {
+        resolve(request.result || [])
+      }
+    })
+  },
+
+  /// ///////////////////////////////////////////////////////////////////
+  /// /////////////////////////    更新操作    ///////////////////////////
+  /// ///////////////////////////////////////////////////////////////////
+
+  /**
+   * 修改主任务属性
+   * @param {Number} id
+   * @param {Object} paramObject
+   */
+  setTaskParam (id, paramObject) {
+    let objectStore = this.db.transaction(['task'], 'readwrite').objectStore('task')
+    let request = objectStore.get(id)
+
+    return new Promise((resolve, reject) => {
+      request.onerror = function (event) {
+        reject(new Error('根据id获取数据失败'))
+      }
+      request.onsuccess = function (event) {
+        var data = event.target.result
+        // 更新你想修改的数据
+        for (let key in paramObject) {
+          data[key] = paramObject[key]
+        }
+        // 把更新过的对象放回数据库
+        var requestUpdate = objectStore.put(data)
+        requestUpdate.onerror = function (event) {
+          reject(new Error('更新数据失败'))
+        }
+        requestUpdate.onsuccess = function (event) {
+          resolve('数据更新成功')
+        }
+      }
+    })
+  },
+
+  /**
+   * 修改子任务属性
+   * @param {Number} subId
+   * @param {Object} paramObject
+   */
+  setSubTaskParam (subId, paramObject) {
+    let objectStore = this.db.transaction(['sub_task'], 'readwrite').objectStore('sub_task')
+    let request = objectStore.get(subId)
+
+    return new Promise((resolve, reject) => {
+      request.onerror = function (event) {
+        reject(new Error('根据id获取数据失败'))
+      }
+      request.onsuccess = function (event) {
+        var data = event.target.result
+        // 更新你想修改的数据
+        for (let key in paramObject) {
+          data[key] = paramObject[key]
+        }
+        // 把更新过的对象放回数据库
+        var requestUpdate = objectStore.put(data)
+        requestUpdate.onerror = function (event) {
+          reject(new Error('更新数据失败'))
+        }
+        requestUpdate.onsuccess = function (event) {
+          resolve('数据更新成功')
+        }
+      }
+    })
+  },
+
   /**
    * 设置主任务is_done
-   * @param {*} id id
+   * @param {Number} id id
    * @param {number} isDone is_done
    */
   setTaskIsDone (id, isDone) {
@@ -155,26 +290,11 @@ export default {
       }
     })
   },
-  /**
-   * 根据主任务id获取子任务
-   * @param {*} id id
-   */
-  getSubTaskById (id) {
-    let objectStore = this.db.transaction(['sub_task']).objectStore('sub_task')
-    let request = objectStore.index('id').getAll(id)
-    return new Promise((resolve, reject) => {
-      request.onerror = function (event) {
-        reject(new Error('根据主任务id获取子任务失败'))
-      }
-      request.onsuccess = function (event) {
-        resolve(request.result || [])
-      }
-    })
-  },
+
   /**
    * 设置子任务is_done
-   * @param {*} subId 子任务sub_id
-   * @param {*} isDone is_done
+   * @param {Number} subId 子任务sub_id
+   * @param {Number} isDone is_done
    */
   setSubTaskIsDone (subId, isDone) {
     let objectStore = this.db.transaction(['sub_task'], 'readwrite').objectStore('sub_task')
@@ -199,4 +319,41 @@ export default {
       }
     })
   }
+
+  /// ///////////////////////////////////////////////////////////////////
+  /// /////////////////////////    END    ///////////////////////////////
+  /// ///////////////////////////////////////////////////////////////////
+
 }
+
+/**
+ *                             _ooOoo_
+ *                            o8888888o
+ *                            88" . "88
+ *                            (| -_- |)
+ *                            O\  =  /O
+ *                         ____/`---'\____
+ *                       .'  \\|     |//  `.
+ *                      /  \\|||  :  |||//  \
+ *                     /  _||||| -:- |||||-  \
+ *                     |   | \\\  -  /// |   |
+ *                     | \_|  ''\---/''  |   |
+ *                     \  .-\__  `-`  ___/-. /
+ *                   ___`. .'  /--.--\  `. . __
+ *                ."" '<  `.___\_<|>_/___.'  >'"".
+ *               | | :  `- \`.;`\ _ /`;.`/ - ` : | |
+ *               \  \ `-.   \_ __\ /__ _/   .-` /  /
+ *          ======`-.____`-.___\_____/___.-`____.-'======
+ *                             `=---='
+ *          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ *                     佛祖保佑        永无BUG
+ *            佛曰:
+ *                   写字楼里写字间，写字间里程序员；
+ *                   程序人员写程序，又拿程序换酒钱。
+ *                   酒醒只在网上坐，酒醉还来网下眠；
+ *                   酒醉酒醒日复日，网上网下年复年。
+ *                   但愿老死电脑间，不愿鞠躬老板前；
+ *                   奔驰宝马贵者趣，公交自行程序员。
+ *                   别人笑我忒疯癫，我笑自己命太贱；
+ *                   不见满街漂亮妹，哪个归得程序员？
+*/

@@ -44,7 +44,8 @@
               :ref="`taskName${item.id}`"
               @click="editTaskName(item.id)"
               spellcheck="false"
-              @keydown.enter.prevent="changeTaskName(item.id)"
+              @keydown.enter.prevent="changeTaskName(item.id, item.name)"
+              @blur.prevent="changeTaskName(item.id, item.name)"
               >{{ item.name }}</span
             >
             <div class="subTask">
@@ -62,7 +63,16 @@
                       handleCheckedSubTask(subItem.sub_id, +isDone);
                     }
                   "
-                  >{{ subItem.sub_name }}</el-checkbox
+                  >{{ "" }}</el-checkbox
+                >
+                <span
+                  class="subTaskName"
+                  :ref="`subTaskName${subItem.sub_id}`"
+                  @click="editSubTaskName(subItem.sub_id)"
+                  spellcheck="false"
+                  @keydown.enter.prevent="changeSubTaskName(subItem.sub_id, subItem.sub_name)"
+                  @blur.prevent="changeSubTaskName(subItem.sub_id, subItem.sub_name)"
+                  >{{ subItem.sub_name }}</span
                 >
               </el-checkbox-group>
               <el-input
@@ -97,7 +107,16 @@
                     handleCheckedTask(item.id, +isDone);
                   }
                 "
-                >{{ item.name }}</el-checkbox
+                 >{{ "" }}</el-checkbox
+              >
+              <span
+                class="taskName"
+                :ref="`taskName${item.id}`"
+                @click="editTaskName(item.id)"
+                spellcheck="false"
+                @keydown.enter.prevent="changeTaskName(item.id, item.name)"
+                @blur.prevent="changeTaskName(item.id, item.name)"
+                >{{ item.name }}</span
               >
               <div class="subTask">
                 <el-checkbox-group
@@ -113,7 +132,16 @@
                         handleCheckedSubTask(subItem.sub_id, +isDone);
                       }
                     "
-                    >{{ subItem.sub_name }}</el-checkbox
+                    >{{ "" }}</el-checkbox
+                  >
+                  <span
+                    class="subTaskName"
+                    :ref="`subTaskName${subItem.sub_id}`"
+                    @click="editSubTaskName(subItem.sub_id)"
+                    spellcheck="false"
+                    @keydown.enter.prevent="changeSubTaskName(subItem.sub_id, subItem.sub_name)"
+                    @blur.prevent="changeSubTaskName(subItem.sub_id, subItem.sub_name)"
+                    >{{ subItem.sub_name }}</span
                   >
                 </el-checkbox-group>
                 <el-input
@@ -163,6 +191,7 @@ export default {
       isShowDoneTasks: false,
       checkTasks: [], // 主任务选中的id
       checkSubTasks: [],
+      tasks: [], // 所有任务
       notDoneTasks: [], // 未完成的任务
       doneTasks: [], // 已完成的任务
       newTask: '',
@@ -255,8 +284,26 @@ export default {
     editTaskName (id) { // 主任务名设为可编辑
       this.$refs[`taskName${id}`][0].contentEditable = true
     },
-    changeTaskName (id) { // 修改主任务名
-      console.log(id)
+    changeTaskName (id, oldTaskName) { // 修改主任务名
+      let doc = this.$refs[`taskName${id}`][0]
+      let newTaskName = doc.innerHTML
+      if (newTaskName !== oldTaskName) {
+        db.setTaskParam(id, {'name': newTaskName})
+        this.init()
+      }
+      doc.blur()
+    },
+    editSubTaskName (subId) { // 子任务名设为可编辑
+      this.$refs[`subTaskName${subId}`][0].contentEditable = true
+    },
+    changeSubTaskName (id, oldSubTaskName) { // 修改子任务名
+      let doc = this.$refs[`subTaskName${id}`][0]
+      let newSubTaskName = doc.innerHTML
+      if (newSubTaskName !== oldSubTaskName) {
+        db.setTaskParam(id, {'sub_name': newSubTaskName})
+        this.init()
+      }
+      doc.blur()
     },
     openSetting () {
       console.log('open setting')
@@ -288,6 +335,7 @@ export default {
 [contenteditable]:focus {
   outline: none;
   color: #000;
+  caret-color: #409EFF;
 }
 .marginBottom {
   margin-bottom: 10px;
@@ -329,6 +377,10 @@ export default {
 .taskName {
   font-size: 16px;
   font-weight: bold;
+  color: #606266;
+}
+.subTaskName {
+  font-size: 15px;
   color: #606266;
 }
 .showDoneTasks {

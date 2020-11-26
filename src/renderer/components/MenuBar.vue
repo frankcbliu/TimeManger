@@ -15,6 +15,7 @@
         style="menu-input"
         v-model="newTask"
         placeholder="添加新任务"
+        size="small"
         class="newTaskInput"
         @change="createTask"
         :class="{ scroll: isScroll }"
@@ -36,7 +37,14 @@
                   handleCheckedTask(item.id, +isDone, item.subTasks);
                 }
               "
-              >{{ item.name }}</el-checkbox
+              >{{ "" }}</el-checkbox
+            >
+            <span
+              class="taskName"
+              :ref="`taskName${item.id}`"
+              @click="editTaskName(item.id)"
+              @keydown.enter.prevent="changeTaskName(item.id)"
+              >{{ item.name }}</span
             >
             <div class="subTask">
               <el-checkbox-group
@@ -59,8 +67,7 @@
               <el-input
                 v-model="newSubTask[item.id]"
                 placeholder="添加新子任务"
-                class="marginBottom"
-                size="small"
+                size="mini"
                 @change="
                   (newSubTask) => createSubTask(newSubTask, item.id, item.name)
                 "
@@ -122,9 +129,18 @@
                         item.is_done
                       )
                   "
-                ></el-input>
+                />
               </div>
             </el-checkbox-group>
+            <el-input
+              v-model="newSubTask[item.id]"
+              placeholder="添加新子任务"
+              size="mini"
+              @change="
+                (newSubTask) =>
+                  createSubTask(newSubTask, item.id, item.name, item.is_done)
+              "
+            ></el-input>
           </template>
         </template>
       </div>
@@ -167,7 +183,6 @@ export default {
     let taskDoc = this.$refs['task']
     taskDoc.addEventListener('scroll', () => {
       this.isScroll = !!taskDoc.scrollTop
-      console.log(this.isScroll)
     })
   },
   methods: {
@@ -244,6 +259,12 @@ export default {
       await db.setSubTaskIsDone(subId, isDone)
       this.init()
     },
+    editTaskName (id) { // 主任务名设为可编辑
+      this.$refs[`taskName${id}`][0].contentEditable = true
+    },
+    changeTaskName (id) { // 修改主任务名
+      console.log(id)
+    },
     openSetting () {
       console.log('open setting')
       // 右键菜单
@@ -271,16 +292,21 @@ export default {
 </script>
 
 <style scoped>
+[contenteditable]:focus {
+  outline: none;
+  color: red;
+}
 .marginBottom {
   margin-bottom: 10px;
 }
 #wrapper {
   height: 100vh;
   width: 100vw;
+  overflow-y: hidden;
 }
 
 #top {
-  height: 10%;
+  height: 12%;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -290,30 +316,33 @@ export default {
   font-size: 16px;
 }
 #mid {
-  height: 82%;
+  height: 80%;
 }
 
-
-
 .newTaskInput {
-  height: 13%;
+  height: 15%;
   display: flex;
   align-items: center;
   padding: 0 20px;
 }
 .scroll {
-  box-shadow: 0 3px 10px 0 rgba(0, 0, 0, 0.12);
+  box-shadow: 0 3px 8px -4px rgba(0, 0, 0, 0.12);
 }
 .task {
   padding: 10px 20px;
-  height: 87%;
+  height: 85%;
   overflow-y: scroll;
+}
+.taskName {
+  font-size: 16px;
+  font-weight: bold;
+  color: #606266;
 }
 .showDoneTasks {
   cursor: pointer;
 }
 .subTask {
-  padding: 10px 0 10px 20px;
+  padding: 5px 0 5px 20px;
 }
 #bottom {
   height: 8%;

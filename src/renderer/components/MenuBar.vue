@@ -14,103 +14,107 @@
       <el-input
         v-model="newTask"
         placeholder="添加新任务"
-        class="marginBottom"
+        class="newTaskInput"
         @change="createTask"
-      ></el-input>
-      <!-- 未完成的任务 -->
-      <template v-if="notDoneTasks.length > 0">
-        <el-checkbox-group
-          v-model="checkTasks"
-          v-for="item in notDoneTasks"
-          :key="`notDoneTasks${item.id}`"
-          class="marginBottom"
-        >
-          <el-checkbox
-            :label="item.id"
-            @change="
-              (isDone) => {
-                handleCheckedTask(item.id, +isDone, item.subTasks);
-              }
-            "
-            >{{ item.name }}</el-checkbox>
-          <div class="subTask">
-            <el-checkbox-group
-              v-model="checkSubTasks"
-              v-for="subItem in item.subTasks"
-              :key="`subtask${subItem.sub_id}`"
-              class= "marginBottom"
-            >
-              <el-checkbox
-                :label="subItem.sub_id"
-                @change="
-                  (isDone) => {
-                    handleCheckedSubTask(subItem.sub_id, +isDone);
-                  }
-                "
-                >{{ subItem.sub_name }}</el-checkbox
-              >
-            </el-checkbox-group>
-            <el-input
-              v-model="newSubTask[item.id]"
-              placeholder="添加新子任务"
-              class="marginBottom"
-              size="small"
-              @change="(newSubTask) => createSubTask(newSubTask, item.id, item.name)"
-            ></el-input>
-          </div>
-        </el-checkbox-group>
-      </template>
-      <!-- 已完成的任务 -->
-      <template v-if="doneTasks.length > 0">
-        <div @click="clickShowDoneTasks" class="showDoneTasks marginBottom">
-          <i class="el-icon-arrow-up" v-if="isShowDoneTasks"></i>
-          <i class="el-icon-arrow-down" v-else></i>
-          完成的任务
-        </div>
-        <template v-if="isShowDoneTasks">
+        :class="{ scroll: isScroll }"
+      ></el-input>      
+      <div class="task" ref="task">
+        <!-- 未完成的任务 -->
+        <template v-if="notDoneTasks.length > 0">
           <el-checkbox-group
             v-model="checkTasks"
-            v-for="(item, index) in doneTasks"
-            :key="`doneTasks${index}`"
+            v-for="item in notDoneTasks"
+            :key="`notDoneTasks${item.id}`"
             class="marginBottom"
           >
             <el-checkbox
               :label="item.id"
               @change="
                 (isDone) => {
-                  handleCheckedTask(item.id, +isDone);
+                  handleCheckedTask(item.id, +isDone, item.subTasks);
                 }
               "
-              >{{ item.name }}</el-checkbox
-            >
+              >{{ item.name }}</el-checkbox>
             <div class="subTask">
-            <el-checkbox-group
-              v-model="checkSubTasks"
-              v-for="subItem in item.subTasks"
-              :key="`subtask${subItem.sub_id}`"
-              class= "marginBottom"
-            >
-              <el-checkbox
-                :label="subItem.sub_id"
-                @change="
-                  (isDone) => {
-                    handleCheckedSubTask(subItem.sub_id, +isDone);
-                  }
-                "
-                >{{ subItem.sub_name }}</el-checkbox
+              <el-checkbox-group
+                v-model="checkSubTasks"
+                v-for="subItem in item.subTasks"
+                :key="`subtask${subItem.sub_id}`"
+                class= "marginBottom"
               >
-            </el-checkbox-group>
-            <el-input
-              v-model="newSubTask[item.id]"
-              placeholder="添加新子任务"
-              class="marginBottom"
-              size="small"
-              @change="(newSubTask) => createSubTask(newSubTask, item.id, item.name, item.is_done)"
-            ></el-input>
-          </div>
+                <el-checkbox
+                  :label="subItem.sub_id"
+                  @change="
+                    (isDone) => {
+                      handleCheckedSubTask(subItem.sub_id, +isDone);
+                    }
+                  "
+                  >{{ subItem.sub_name }}</el-checkbox
+                >
+              </el-checkbox-group>
+              <el-input
+                v-model="newSubTask[item.id]"
+                placeholder="添加新子任务"
+                class="marginBottom"
+                size="small"
+                @change="(newSubTask) => createSubTask(newSubTask, item.id, item.name)"
+              ></el-input>
+            </div>
           </el-checkbox-group>
         </template>
-      </template>
+        <!-- 已完成的任务 -->
+        <template v-if="doneTasks.length > 0">
+          <div @click="clickShowDoneTasks" class="showDoneTasks marginBottom">
+            <i class="el-icon-arrow-up" v-if="isShowDoneTasks"></i>
+            <i class="el-icon-arrow-down" v-else></i>
+            完成的任务
+          </div>
+          <template v-if="isShowDoneTasks">
+            <el-checkbox-group
+              v-model="checkTasks"
+              v-for="(item, index) in doneTasks"
+              :key="`doneTasks${index}`"
+              class="marginBottom"
+            >
+              <el-checkbox
+                :label="item.id"
+                @change="
+                  (isDone) => {
+                    handleCheckedTask(item.id, +isDone);
+                  }
+                "
+                >{{ item.name }}</el-checkbox
+              >
+              <div class="subTask">
+              <el-checkbox-group
+                v-model="checkSubTasks"
+                v-for="subItem in item.subTasks"
+                :key="`subtask${subItem.sub_id}`"
+                class= "marginBottom"
+              >
+                <el-checkbox
+                  :label="subItem.sub_id"
+                  @change="
+                    (isDone) => {
+                      handleCheckedSubTask(subItem.sub_id, +isDone);
+                    }
+                  "
+                  >{{ subItem.sub_name }}</el-checkbox
+                >
+              </el-checkbox-group>
+              <el-input
+                v-model="newSubTask[item.id]"
+                placeholder="添加新子任务"
+                class="marginBottom"
+                size="small"
+                @change="(newSubTask) => createSubTask(newSubTask, item.id, item.name, item.is_done)"
+              ></el-input>
+            </div>
+            </el-checkbox-group>
+          </template>
+        </template>
+      </div>
+     
     </div>
     <div id="mid" v-show="activeName === 'two'">two</div>
     <div id="bottom">
@@ -140,12 +144,18 @@ export default {
       notDoneTasks: [], // 未完成的任务
       doneTasks: [], // 已完成的任务
       newTask: '',
-      newSubTask: []
+      newSubTask: [],
+      isScroll: false // 监听滚轮是否滚动
     }
   },
   async mounted () {
     await db.initDB()
     this.init()
+    let taskDoc = this.$refs['task']
+    taskDoc.addEventListener('scroll', () => {
+      this.isScroll = !!taskDoc.scrollTop
+      console.log(this.isScroll)
+    })
   },
   methods: {
     async init () {
@@ -257,17 +267,31 @@ export default {
 }
 
 #top {
-  height: 12%;
+  height: 10%;
   display: flex;
   justify-content: center;
   align-items: center;
+  border-bottom: 1px solid #ddd;
 }
 .toggleBar i {
   font-size: 16px;
 }
 #mid {
-  height: 80%;
+  height: 82%;
+}
+.newTaskInput {
+  height: 13%;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+}
+.scroll {
+  box-shadow: 0 3px 10px 0 rgba(0, 0, 0, .12);
+}
+.task {
   padding: 10px 20px;
+  height: 87%;
+  overflow-y: scroll;
 }
 .showDoneTasks {
   cursor: pointer;
@@ -280,6 +304,7 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  border-top: 1px solid #ddd;
 }
 </style>
 

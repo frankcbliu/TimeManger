@@ -43,6 +43,7 @@
               class="taskName"
               :ref="`taskName${item.id}`"
               @click="editTaskName(item.id)"
+              spellcheck="false"
               @keydown.enter.prevent="changeTaskName(item.id)"
               >{{ item.name }}</span
             >
@@ -119,7 +120,7 @@
                   v-model="newSubTask[item.id]"
                   placeholder="添加新子任务"
                   class="marginBottom"
-                  size="small"
+                  size="mini"
                   @change="
                     (newSubTask) =>
                       createSubTask(
@@ -132,15 +133,7 @@
                 />
               </div>
             </el-checkbox-group>
-            <el-input
-              v-model="newSubTask[item.id]"
-              placeholder="添加新子任务"
-              size="mini"
-              @change="
-                (newSubTask) =>
-                  createSubTask(newSubTask, item.id, item.name, item.is_done)
-              "
-            ></el-input>
+            
           </template>
         </template>
       </div>
@@ -294,7 +287,7 @@ export default {
 <style scoped>
 [contenteditable]:focus {
   outline: none;
-  color: red;
+  color: #000;
 }
 .marginBottom {
   margin-bottom: 10px;

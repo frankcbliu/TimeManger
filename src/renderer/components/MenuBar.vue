@@ -70,8 +70,12 @@
                   :ref="`subTaskName${subItem.sub_id}`"
                   @click="editSubTaskName(subItem.sub_id)"
                   spellcheck="false"
-                  @keydown.enter.prevent="changeSubTaskName(subItem.sub_id, subItem.sub_name)"
-                  @blur.prevent="changeSubTaskName(subItem.sub_id, subItem.sub_name)"
+                  @keydown.enter.prevent="
+                    changeSubTaskName(subItem.sub_id, subItem.sub_name)
+                  "
+                  @blur.prevent="
+                    changeSubTaskName(subItem.sub_id, subItem.sub_name)
+                  "
                   >{{ subItem.sub_name }}</span
                 >
               </el-checkbox-group>
@@ -108,7 +112,7 @@
                     handleCheckedTask(item.id, +isDone);
                   }
                 "
-                 >{{ "" }}</el-checkbox
+                >{{ "" }}</el-checkbox
               >
               <span
                 class="taskName"
@@ -141,8 +145,12 @@
                     :ref="`subTaskName${subItem.sub_id}`"
                     @click="editSubTaskName(subItem.sub_id)"
                     spellcheck="false"
-                    @keydown.enter.prevent="changeSubTaskName(subItem.sub_id, subItem.sub_name)"
-                    @blur.prevent="changeSubTaskName(subItem.sub_id, subItem.sub_name)"
+                    @keydown.enter.prevent="
+                      changeSubTaskName(subItem.sub_id, subItem.sub_name)
+                    "
+                    @blur.prevent="
+                      changeSubTaskName(subItem.sub_id, subItem.sub_name)
+                    "
                     >{{ subItem.sub_name }}</span
                   >
                 </el-checkbox-group>
@@ -289,7 +297,7 @@ export default {
       let doc = this.$refs[`taskName${id}`][0]
       let newTaskName = doc.innerHTML
       if (newTaskName !== oldTaskName) {
-        db.setTaskParam(id, {'name': newTaskName})
+        db.setTaskParam(id, { 'name': newTaskName })
         this.init()
       }
       doc.blur()
@@ -301,7 +309,7 @@ export default {
       let doc = this.$refs[`subTaskName${subId}`][0]
       let newSubTaskName = doc.innerHTML
       if (newSubTaskName !== oldSubTaskName) {
-        db.setSubTaskParam(subId, {'sub_name': newSubTaskName})
+        db.setSubTaskParam(subId, { 'sub_name': newSubTaskName })
         this.init()
       }
       doc.blur()
@@ -336,7 +344,7 @@ export default {
 [contenteditable]:focus {
   outline: none;
   color: #000;
-  caret-color: #409EFF;
+  caret-color: #409eff;
 }
 .marginBottom {
   margin-bottom: 10px;
@@ -371,13 +379,12 @@ export default {
   box-shadow: 0 3px 8px -4px rgba(0, 0, 0, 0.12);
 }
 
-
 .task {
   padding: 10px 20px;
   height: 85%;
   overflow-y: scroll;
 }
-span.taskName{
+span.taskName {
   zoom: 120%;
 }
 .task-checkbox {
@@ -439,10 +446,10 @@ span.el-checkbox__inner {
   border-width: 3px;
   border-color: #92b3f5 !important;
 }
-
-.el-checkbox__input.is-checked + .el-checkbox__label {
+/* 已完成的 checkbox 后的文字变灰色 */
+.el-checkbox.is-checked + span {
   color: #9b9a9a !important;
-  /* text-decoration: line-through; */
+  text-decoration: line-through;
 }
 
 .subTask > .el-input > .el-input.is-active .el-input__inner,

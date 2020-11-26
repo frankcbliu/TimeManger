@@ -30,7 +30,7 @@
             class="marginBottom"
           >
             <el-checkbox
-              style="zoom: 120%"
+              class="task-checkbox"
               :label="item.id"
               @change="
                 (isDone) => {
@@ -55,7 +55,7 @@
                 class="marginBottom"
               >
                 <el-checkbox
-                  style="zoom: 115%"
+                  class="subTask-checkbox"
                   :label="subItem.sub_id"
                   @change="
                     (isDone) => {
@@ -91,6 +91,7 @@
               class="marginBottom"
             >
               <el-checkbox
+                class="task-checkbox"
                 :label="item.id"
                 @change="
                   (isDone) => {
@@ -107,6 +108,7 @@
                   class="marginBottom"
                 >
                   <el-checkbox
+                    class="subTask-checkbox"
                     :label="subItem.sub_id"
                     @change="
                       (isDone) => {
@@ -133,7 +135,6 @@
                 />
               </div>
             </el-checkbox-group>
-            
           </template>
         </template>
       </div>
@@ -321,11 +322,20 @@ export default {
 .scroll {
   box-shadow: 0 3px 8px -4px rgba(0, 0, 0, 0.12);
 }
+
+
 .task {
   padding: 10px 20px;
   height: 85%;
   overflow-y: scroll;
 }
+span.taskName{
+  zoom: 120%;
+}
+.task-checkbox {
+  zoom: 120%;
+}
+
 .taskName {
   font-size: 16px;
   font-weight: bold;
@@ -337,6 +347,10 @@ export default {
 .subTask {
   padding: 5px 0 5px 20px;
 }
+.subTask-checkbox {
+  zoom: 115%;
+}
+
 #bottom {
   height: 8%;
   display: flex;
@@ -363,9 +377,20 @@ export default {
   background-color: #f7f7f7;
 }
 
+/* checkbox 边框未选中时灰色 */
+span.el-checkbox__inner {
+  border-color: #9b9a9a;
+}
+
 .el-input.is-active .el-input__inner,
 .el-input__inner:focus {
   border-width: 3px;
+  border-color: #92b3f5 !important;
+}
+
+.el-checkbox__input.is-checked + .el-checkbox__label {
+  color: #9b9a9a !important;
+  /* text-decoration: line-through; */
 }
 
 .subTask > .el-input > .el-input.is-active .el-input__inner,

@@ -363,9 +363,30 @@ export default {
   font-size: 16px !important;
 }
 .newTaskInput > .el-input__inner {
-  font-size: 25px;
+  font-size: 20px;
   padding-top: 3px;
   padding-left: 6px;
   padding-bottom: 3px;
+  background-color: #f7f7f7;
+}
+
+.el-input.is-active .el-input__inner,
+.el-input__inner:focus {
+  border-width: 3px;
+}
+
+.subTask > .el-input > .el-input.is-active .el-input__inner,
+.subTask > .el-input > .el-input__inner:focus {
+  border-width: 0px;
+  background-color: #f1f2f1;
+}
+
+.subTask > .el-input > .el-input__inner {
+  font-size: 16px;
+  padding-top: 3px;
+  padding-left: 6px;
+  padding-bottom: 3px;
+  background-color: #f2f1f2;
+  border-width: 0px;
 }
 </style>

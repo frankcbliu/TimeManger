@@ -296,11 +296,11 @@ export default {
     editSubTaskName (subId) { // 子任务名设为可编辑
       this.$refs[`subTaskName${subId}`][0].contentEditable = true
     },
-    changeSubTaskName (id, oldSubTaskName) { // 修改子任务名
-      let doc = this.$refs[`subTaskName${id}`][0]
+    changeSubTaskName (subId, oldSubTaskName) { // 修改子任务名
+      let doc = this.$refs[`subTaskName${subId}`][0]
       let newSubTaskName = doc.innerHTML
       if (newSubTaskName !== oldSubTaskName) {
-        db.setTaskParam(id, {'sub_name': newSubTaskName})
+        db.setSubTaskParam(subId, {'sub_name': newSubTaskName})
         this.init()
       }
       doc.blur()
@@ -375,12 +375,12 @@ export default {
   overflow-y: scroll;
 }
 .taskName {
-  font-size: 16px;
+  font-size: 20px;
   font-weight: bold;
   color: #606266;
 }
 .subTaskName {
-  font-size: 15px;
+  font-size: 16px;
   color: #606266;
 }
 .showDoneTasks {

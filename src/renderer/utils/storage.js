@@ -9,12 +9,24 @@ const path = require('path')
  * 判断配置文件是否存在
  */
 function isExit () {
+  console.log()
   let success = true
   if (!(localConfig.config && typeof localConfig.config === 'object')) {
     success = initConfig()
   }
   return success
 }
+
+/**
+ * 判断是否需要重新读取文件
+ */
+function checkUpdate () {
+  let now = fs.statSync(localConfig.configUrl).mtimeMs
+  if (localConfig.config.last !== now) {
+    initConfig()
+  }
+}
+
 /**
  * 初始化config
  */
@@ -40,6 +52,7 @@ function initConfig () {
 function readConfig () {
   try {
     const result = fs.readFileSync(localConfig.configUrl)
+    localConfig.last = fs.statSync(localConfig.configUrl).mtimeMs
     return result
   } catch (error) {
     return false
@@ -61,6 +74,7 @@ function writeConfig (value) {
 const localConfig = {
   config: null,
   configUrl: path.join(__dirname, './localConfig.json'),
+  last: null,
   setStoragePath: (path) => {
     localConfig.configUrl = path
   },
@@ -70,6 +84,7 @@ const localConfig = {
   getItem: (key) => {
     const success = isExit()
     if (success) {
+      checkUpdate()
       const result = localConfig.config[key]
       return result
     }
@@ -91,6 +106,7 @@ const localConfig = {
   getAll: () => {
     let success = isExit()
     if (success) {
+      checkUpdate()
       return localConfig.config
     }
     return null

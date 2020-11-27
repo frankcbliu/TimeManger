@@ -175,7 +175,9 @@
         </template>
       </div>
     </div>
-    <div id="mid" v-show="activeName === 'two'">two</div>
+    <div id="mid" v-show="activeName === 'two'">
+      <tomato-clock />
+    </div>
     <div id="bottom">
       <div></div>
       <span style="margin: 1%; font-size: 25px" @click="openSetting">
@@ -187,12 +189,16 @@
 
 <script>
 import db from '../utils/indexedDB.js'
+import TomatoClock from './TomatoClock.vue'
 // 需要用到 electron
 const { remote, ipcRenderer } = require('electron')
 const { Menu, MenuItem } = remote
 
 export default {
   name: 'menu-bar',
+  components: {
+    TomatoClock
+  },
   data () {
     return {
       activeName: 'one',
@@ -441,11 +447,12 @@ span.el-checkbox__inner {
   border-color: #9b9a9a;
 }
 
-.el-input.is-active .el-input__inner,
-.el-input__inner:focus {
+.newTaskInput > .el-input.is-active .el-input__inner,
+.newTaskInput > .el-input__inner:focus {
   border-width: 3px;
   border-color: #92b3f5 !important;
 }
+
 /* 已完成的 checkbox 后的文字变灰色 */
 .el-checkbox.is-checked + span {
   color: #9b9a9a !important;

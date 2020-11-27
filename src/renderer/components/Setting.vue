@@ -12,7 +12,9 @@
     </div>
     <div id="mid" v-show="activeName === 'one'">
       <div id="card" style="height: 13%">
-        <el-checkbox v-model="autoLaunch" @change="autoStart">开机自启动</el-checkbox>
+        <el-checkbox v-model="autoLaunch" @change="autoStart"
+          >开机自启动</el-checkbox
+        >
       </div>
       <div id="card" style="height: 30%">
         <div>
@@ -23,6 +25,7 @@
             show-input
             :max="60"
             :min="1"
+            @change="updateWorkTime"
           ></el-slider>
         </div>
         <div>
@@ -33,12 +36,12 @@
             show-input
             :max="60"
             :min="1"
+            @change="updateRestTime"
           ></el-slider>
         </div>
       </div>
     </div>
-    <div id="mid" v-show="activeName === 'two'">
-    </div>
+    <div id="mid" v-show="activeName === 'two'"></div>
   </div>
 </template>
 
@@ -56,18 +59,24 @@ export default {
     }
   },
   mounted () {
-    this.autoLaunch = storage.getItem('auto-launch')
-    console.log('当前状态：', this.autoLaunch)
+    this.autoLaunch = storage.getItem('auto-launch') || false
+    this.workTime = storage.getItem('work-time') || 25
+    this.restTime = storage.getItem('rest-time') || 5
   },
   methods: {
-    autoStart () {
-      console.log(this.autoLaunch)
+    autoStart () { // 根据自启配置修改缓存
       if (this.autoLaunch) {
         storage.setItem('auto-launch', true)
       } else {
         storage.setItem('auto-launch', false)
       }
       console.log(storage.getAll())
+    },
+    updateWorkTime () { // 工作时间
+      storage.setItem('work-time', this.workTime)
+    },
+    updateRestTime () { // 休息时间
+      storage.setItem('rest-time', this.restTime)
     }
   }
 }

@@ -32,7 +32,7 @@
                 class="notDoneTask"
               >
                 <el-checkbox
-                  style="zoom: 120%"
+                  class="subTask-checkbox"
                   :label="item.id"
                   @change="
                     (isDone) => {
@@ -105,13 +105,14 @@
               class="doneTask"
             >
               <el-checkbox
+                class="task-checkbox"
                 :label="item.id"
                 @change="
                   (isDone) => {
                     handleCheckedTask(item.id, +isDone);
                   }
                 "
-                 >{{ "" }}</el-checkbox
+                >{{ "" }}</el-checkbox
               >
               <span
                 class="taskName"
@@ -130,6 +131,7 @@
                   class="marginBottom"
                 >
                   <el-checkbox
+                    class="subTask-checkbox"
                     :label="subItem.sub_id"
                     @change="
                       (isDone) => {
@@ -143,8 +145,12 @@
                     :ref="`subTaskName${subItem.sub_id}`"
                     @click="editSubTaskName(subItem.sub_id)"
                     spellcheck="false"
-                    @keydown.enter.prevent="changeSubTaskName(subItem.sub_id, subItem.sub_name)"
-                    @blur.prevent="changeSubTaskName(subItem.sub_id, subItem.sub_name)"
+                    @keydown.enter.prevent="
+                      changeSubTaskName(subItem.sub_id, subItem.sub_name)
+                    "
+                    @blur.prevent="
+                      changeSubTaskName(subItem.sub_id, subItem.sub_name)
+                    "
                     >{{ subItem.sub_name }}</span
                   >
                 </el-checkbox-group>
@@ -165,7 +171,6 @@
                 />
               </div>
             </el-checkbox-group>
-            
           </template>
         </template>
       </div>
@@ -303,7 +308,7 @@ export default {
       let taskNameRef = this.$refs[`taskName${id}`][0]
       let newTaskName = taskNameRef.innerHTML
       if (newTaskName !== oldTaskName) {
-        db.setTaskParam(id, {'name': newTaskName})
+        db.setTaskParam(id, { 'name': newTaskName })
         this.init()
       }
       taskNameRef.blur()
@@ -315,7 +320,7 @@ export default {
       let subTaskNameRef = this.$refs[`subTaskName${subId}`][0]
       let newSubTaskName = subTaskNameRef.innerHTML
       if (newSubTaskName !== oldSubTaskName) {
-        db.setSubTaskParam(subId, {'sub_name': newSubTaskName})
+        db.setSubTaskParam(subId, { 'sub_name': newSubTaskName })
         this.init()
       }
       subTaskNameRef.blur()
@@ -350,7 +355,7 @@ export default {
 [contenteditable]:focus {
   outline: none;
   color: #000;
-  caret-color: #409EFF;
+  caret-color: #409eff;
 }
 .marginBottom {
   margin-bottom: 10px;
@@ -399,6 +404,9 @@ export default {
 .doneTask:hover {
   background-color: #e6e3e6;
 }
+.task-checkbox {
+  zoom: 120%;
+}
 .taskName {
   font-size: 20px;
   font-weight: bold;
@@ -418,6 +426,10 @@ export default {
 .subTask {
   padding: 5px 0 5px 20px;
 }
+.subTask-checkbox {
+  zoom: 115%;
+}
+
 #bottom {
   height: 8%;
   display: flex;
@@ -444,9 +456,20 @@ export default {
   background-color: #f7f7f7;
 }
 
+/* checkbox 边框未选中时灰色 */
+span.el-checkbox__inner {
+  border-color: #9b9a9a;
+}
+
 .el-input.is-active .el-input__inner,
 .el-input__inner:focus {
   border-width: 3px;
+  border-color: #92b3f5 !important;
+}
+/* 已完成的 checkbox 后的文字变灰色 */
+.el-checkbox.is-checked + span {
+  color: #9b9a9a !important;
+  text-decoration: line-through;
 }
 
 .subTask > .el-input > .el-input.is-active .el-input__inner,

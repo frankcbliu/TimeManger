@@ -41,7 +41,17 @@
         </div>
       </div>
     </div>
-    <div id="mid" v-show="activeName === 'two'"></div>
+    <div id="mid" v-show="activeName === 'two'">
+      <el-select v-model="clockSound" placeholder="请选择音频" @change="updateSound">
+        <el-option
+          v-for="item in options"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value"
+        >
+        </el-option>
+      </el-select>
+    </div>
   </div>
 </template>
 
@@ -55,13 +65,25 @@ export default {
       activeName: 'one',
       autoLaunch: false, // 开机自启动
       workTime: 25, // 工作钟时长
-      restTime: 5 // 休息钟时长
+      restTime: 5, // 休息钟时长
+      clockSound: '',
+      options: [{
+        value: 'dida.mp3',
+        label: '嘀嗒'
+      }, {
+        value: 'rain.mp3',
+        label: '雨声'
+      }, {
+        value: '选项3',
+        label: '蚵仔煎'
+      }]
     }
   },
   mounted () {
     this.autoLaunch = storage.getItem('auto-launch') || false
     this.workTime = storage.getItem('work-time') || 25
     this.restTime = storage.getItem('rest-time') || 5
+    this.clockSound = storage.getItem('clock-bg-sound') || 'dida.mp3'
   },
   methods: {
     autoStart () { // 根据自启配置修改缓存
@@ -70,13 +92,18 @@ export default {
       } else {
         storage.setItem('auto-launch', false)
       }
-      console.log(storage.getAll())
     },
     updateWorkTime () { // 工作时间
       storage.setItem('work-time', this.workTime)
+      this.$store.dispatch('changeWorkTime', this.workTime)
     },
     updateRestTime () { // 休息时间
       storage.setItem('rest-time', this.restTime)
+      this.$store.dispatch('changeRestTime', this.restTime)
+    },
+    updateSound () { // 更新背景音
+      storage.setItem('clock-bg-sound', this.clockSound)
+      this.$store.dispatch('changeSound', this.clockSound)
     }
   }
 }

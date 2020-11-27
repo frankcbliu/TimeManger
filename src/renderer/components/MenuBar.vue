@@ -357,6 +357,7 @@ export default {
 </script>
 
 <style scoped>
+
 [contenteditable]:focus {
   outline: none;
   color: #000;
@@ -366,9 +367,11 @@ export default {
   margin-bottom: 10px;
 }
 #wrapper {
-  height: 100vh;
+  background-color: #f2f1f2;
+  height: calc(100vh - 10px);
   width: 100vw;
   overflow-y: hidden;
+  border-radius: 8px;
 }
 
 #top {

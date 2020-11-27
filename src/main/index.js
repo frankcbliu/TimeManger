@@ -1,5 +1,6 @@
 // 'use strict'
 import storage from '../renderer/utils/storage.js'
+import '../renderer/store'
 
 const console = require('console')
 const { app, ipcMain, BrowserWindow } = require('electron')
@@ -19,6 +20,8 @@ let mb = menubar({
   // 设置 icon
   'icon': iconURL,
   'browserWindow': {
+    'transparent': true,
+    // 'resizable': false,
     'webPreferences': {
       'nodeIntegration': true,
       'enableRemoteModule': true
@@ -70,6 +73,10 @@ function updateAutoLaunch (isAutoLaunch) {
 function checkAutoLaunch () {
   let curLaunchConfig = app.getLoginItemSettings().openAtLogin
   let fileLaunchConfig = storage.getItem('auto-launch')
+  if (fileLaunchConfig === undefined) {
+    storage.setItem('auto-launch', false)
+    fileLaunchConfig = false
+  }
 
   // 当前配置与开机配置不一致时，进行修改
   console.log(storage.getAll(), '\n\n', '当前自启配置：', curLaunchConfig, ' 缓存配置：', fileLaunchConfig)
@@ -79,6 +86,7 @@ function checkAutoLaunch () {
 }
 
 var win
+// 设置窗口
 function openSettingWindow () {
   win = new BrowserWindow({
     title: 'Prefrence',
@@ -114,6 +122,11 @@ mb.on('ready', function ready () {
 ipcMain.on('setting', () => {
   openSettingWindow()
 })
+
+// // 刷新时钟界面
+// ipcMain.on('reload-clock', () => {
+//   mb.window.reload()
+// })
 
 // 退出程序，销毁窗口
 ipcMain.on('quit', () => {

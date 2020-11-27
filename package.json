@@ -50,7 +50,8 @@
     }
   },
   "dependencies": {
-    "axios": "^0.18.0"
+    "axios": "^0.18.0",
+    "vuedraggable": "^2.24.3"
   },
   "devDependencies": {
     "ajv": "^6.5.0",

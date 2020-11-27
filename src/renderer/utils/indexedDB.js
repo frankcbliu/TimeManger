@@ -46,6 +46,7 @@ export default {
           objectStore.createIndex('tag', 'tag', { unique: false }) // 标签
           objectStore.createIndex('is_done', 'is_done', { unique: false }) // 是否完成
           objectStore.createIndex('tag_done', ['tag', 'is_done'], { unique: false }) // 根据标签和是否完成
+          objectStore.createIndex('done_date', 'done_date', { unique: false }) // 完成日期
           // 其他字段：count(番茄钟数量)、remind_time(提醒时间)、sum_time(总用时)、desc(描述)
         }
         if (!db.objectStoreNames.contains('sub_task')) {
@@ -162,16 +163,16 @@ export default {
   },
 
   /**
-   * 根据完成情况获取主任务
-   * @param {Number} isDone 是否完成
+   * 根据参数获取主任务
+   * @param {String} key
+   * @param {*} value
    */
-  getTaskByIsDone (isDone) {
+  getTaskByParam (key, value) {
     let objectStore = this.db.transaction(['task']).objectStore('task')
-    let request = objectStore.index('is_done').getAll(isDone)
-
+    let request = objectStore.index(key).getAll(value)
     return new Promise((resolve, reject) => {
       request.onerror = function (event) {
-        reject(new Error('获取全部主任务失败'))
+        reject(new Error('根据参数获取主任务失败'))
       }
       request.onsuccess = function (event) {
         resolve(request.result || [])

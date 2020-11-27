@@ -20,71 +20,75 @@
         @change="createTask"
         :class="{ scroll: isScroll }"
       ></el-input>
-      <div class="task" ref="task">
+      <div class="tasks" ref="tasks">
         <!-- 未完成的任务 -->
         <template v-if="notDoneTasks.length > 0">
-          <el-checkbox-group
-            v-model="checkTasks"
-            v-for="item in notDoneTasks"
-            :key="`notDoneTasks${item.id}`"
-            class="marginBottom"
-          >
-            <el-checkbox
-              style="zoom: 120%"
-              :label="item.id"
-              @change="
-                (isDone) => {
-                  handleCheckedTask(item.id, +isDone, item.subTasks);
-                }
-              "
-              >{{ "" }}</el-checkbox
-            >
-            <span
-              class="taskName"
-              :ref="`taskName${item.id}`"
-              @click="editTaskName(item.id)"
-              spellcheck="false"
-              @keydown.enter.prevent="changeTaskName(item.id, item.name)"
-              @blur.prevent="changeTaskName(item.id, item.name)"
-              >{{ item.name }}</span
-            >
-            <div class="subTask">
+          <draggable v-model="notDoneTasks">
+            <transition-group>
               <el-checkbox-group
-                v-model="checkSubTasks"
-                v-for="subItem in item.subTasks"
-                :key="`subtask${subItem.sub_id}`"
-                class="marginBottom"
+                v-model="checkTasks"
+                v-for="item in notDoneTasks"
+                :key="`notDoneTasks${item.id}`"
+                class="notDoneTask"
               >
                 <el-checkbox
-                  style="zoom: 115%"
-                  :label="subItem.sub_id"
+                  style="zoom: 120%"
+                  :label="item.id"
                   @change="
                     (isDone) => {
-                      handleCheckedSubTask(subItem.sub_id, +isDone);
+                      handleCheckedTask(item.id, +isDone, item.subTasks);
                     }
                   "
                   >{{ "" }}</el-checkbox
                 >
                 <span
-                  class="subTaskName"
-                  :ref="`subTaskName${subItem.sub_id}`"
-                  @click="editSubTaskName(subItem.sub_id)"
+                  class="taskName"
+                  :ref="`taskName${item.id}`"
+                  @click="editTaskName(item.id)"
                   spellcheck="false"
-                  @keydown.enter.prevent="changeSubTaskName(subItem.sub_id, subItem.sub_name)"
-                  @blur.prevent="changeSubTaskName(subItem.sub_id, subItem.sub_name)"
-                  >{{ subItem.sub_name }}</span
+                  @keydown.enter.prevent="changeTaskName(item.id, item.name)"
+                  @blur.prevent="changeTaskName(item.id, item.name)"
+                  >{{ item.name }}</span
                 >
+                <div class="subTask">
+                  <el-checkbox-group
+                    v-model="checkSubTasks"
+                    v-for="subItem in item.subTasks"
+                    :key="`subtask${subItem.sub_id}`"
+                    class="marginBottom"
+                  >
+                    <el-checkbox
+                      style="zoom: 115%"
+                      :label="subItem.sub_id"
+                      @change="
+                        (isDone) => {
+                          handleCheckedSubTask(item.id, subItem.sub_id, +isDone);
+                        }
+                      "
+                      >{{ "" }}</el-checkbox
+                    >
+                    <span
+                      class="subTaskName"
+                      :ref="`subTaskName${subItem.sub_id}`"
+                      @click="editSubTaskName(subItem.sub_id)"
+                      spellcheck="false"
+                      @keydown.enter.prevent="changeSubTaskName(subItem.sub_id, subItem.sub_name)"
+                      @blur.prevent="changeSubTaskName(subItem.sub_id, subItem.sub_name)"
+                      >{{ subItem.sub_name }}</span
+                    >
+                  </el-checkbox-group>
+                  <el-input
+                    v-model="newSubTask[item.id]"
+                    placeholder="添加新子任务"
+                    size="mini"
+                    @change="
+                      (newSubTask) => createSubTask(newSubTask, item.id, item.name)
+                    "
+                  ></el-input>
+                </div>
               </el-checkbox-group>
-              <el-input
-                v-model="newSubTask[item.id]"
-                placeholder="添加新子任务"
-                size="mini"
-                @change="
-                  (newSubTask) => createSubTask(newSubTask, item.id, item.name)
-                "
-              ></el-input>
-            </div>
-          </el-checkbox-group>
+            </transition-group>
+          </draggable>
         </template>
         <!-- 已完成的任务 -->
         <template v-if="doneTasks.length > 0">
@@ -98,7 +102,7 @@
               v-model="checkTasks"
               v-for="(item, index) in doneTasks"
               :key="`doneTasks${index}`"
-              class="marginBottom"
+              class="doneTask"
             >
               <el-checkbox
                 :label="item.id"
@@ -129,7 +133,7 @@
                     :label="subItem.sub_id"
                     @change="
                       (isDone) => {
-                        handleCheckedSubTask(subItem.sub_id, +isDone);
+                        handleCheckedSubTask(item.id, subItem.sub_id, +isDone);
                       }
                     "
                     >{{ "" }}</el-checkbox
@@ -178,12 +182,14 @@
 
 <script>
 import db from '../utils/indexedDB.js'
+import draggable from 'vuedraggable'
 // 需要用到 electron
 const { remote, ipcRenderer } = require('electron')
 const { Menu, MenuItem } = remote
 
 export default {
   name: 'menu-bar',
+  components: {draggable},
   data () {
     return {
       activeName: 'one',
@@ -196,16 +202,20 @@ export default {
       doneTasks: [], // 已完成的任务
       newTask: '',
       newSubTask: [],
-      isScroll: false // 监听滚轮是否滚动
+      isScroll: false, // 监听滚轮是否滚动
+      taskSort: []
     }
   },
   async mounted () {
     await db.initDB()
     this.init()
-    let taskDoc = this.$refs['task']
-    taskDoc.addEventListener('scroll', () => {
-      this.isScroll = !!taskDoc.scrollTop
+    let tasksRef = this.$refs['tasks']
+    tasksRef.addEventListener('scroll', () => {
+      this.isScroll = !!tasksRef.scrollTop
     })
+  },
+  updated () {
+    console.log(this.notDoneTasks)
   },
   methods: {
     async init () {
@@ -213,7 +223,9 @@ export default {
       this.checkDoneTasks = []
       this.newTask = ''
       this.newSubTask = []
+
       this.tasks = await db.getAllTask()
+      // this.notDoneTasks = await db.getTaskByIsDone
 
       let notDoneTasks = []
       let doneTasks = []
@@ -237,8 +249,8 @@ export default {
       this.notDoneTasks = notDoneTasks
       this.checkTasks = checkTasks
       this.checkSubTasks = checkSubTasks
-      console.log(this.notDoneTasks)
-      console.log(this.doneTasks)
+      // console.log(this.notDoneTasks)
+      // console.log(this.doneTasks)
     },
     clickShowDoneTasks () { // 是否显示已完成的任务
       this.isShowDoneTasks = !this.isShowDoneTasks
@@ -277,33 +289,36 @@ export default {
       }
       this.init()
     },
-    async handleCheckedSubTask (subId, isDone) { // 更改子任务状态
+    async handleCheckedSubTask (id, subId, isDone) { // 更改子任务状态
       await db.setSubTaskIsDone(subId, isDone)
+      if (!isDone) { // 如果未完成，主任务默认为为完成
+        await db.setTaskIsDone(id, 0)
+      }
       this.init()
     },
     editTaskName (id) { // 主任务名设为可编辑
       this.$refs[`taskName${id}`][0].contentEditable = true
     },
     changeTaskName (id, oldTaskName) { // 修改主任务名
-      let doc = this.$refs[`taskName${id}`][0]
-      let newTaskName = doc.innerHTML
+      let taskNameRef = this.$refs[`taskName${id}`][0]
+      let newTaskName = taskNameRef.innerHTML
       if (newTaskName !== oldTaskName) {
         db.setTaskParam(id, {'name': newTaskName})
         this.init()
       }
-      doc.blur()
+      taskNameRef.blur()
     },
     editSubTaskName (subId) { // 子任务名设为可编辑
       this.$refs[`subTaskName${subId}`][0].contentEditable = true
     },
     changeSubTaskName (subId, oldSubTaskName) { // 修改子任务名
-      let doc = this.$refs[`subTaskName${subId}`][0]
-      let newSubTaskName = doc.innerHTML
+      let subTaskNameRef = this.$refs[`subTaskName${subId}`][0]
+      let newSubTaskName = subTaskNameRef.innerHTML
       if (newSubTaskName !== oldSubTaskName) {
         db.setSubTaskParam(subId, {'sub_name': newSubTaskName})
         this.init()
       }
-      doc.blur()
+      subTaskNameRef.blur()
     },
     openSetting () {
       console.log('open setting')
@@ -369,21 +384,35 @@ export default {
 .scroll {
   box-shadow: 0 3px 8px -4px rgba(0, 0, 0, 0.12);
 }
-.task {
-  padding: 10px 20px;
+.tasks {
+  /* padding: 10px 20px; */
   height: 85%;
   overflow-y: scroll;
+}
+.notDoneTask, .doneTask {
+  padding: 10px 20px;
+}
+.notDoneTask:hover {
+  background-color: #e6e3e6;
+  cursor: move;
+}
+.doneTask:hover {
+  background-color: #e6e3e6;
 }
 .taskName {
   font-size: 20px;
   font-weight: bold;
   color: #606266;
 }
+.taskName:hover, .subTaskName:hover {
+  cursor: auto;
+}
 .subTaskName {
   font-size: 16px;
   color: #606266;
 }
 .showDoneTasks {
+  padding: 0 20px;
   cursor: pointer;
 }
 .subTask {

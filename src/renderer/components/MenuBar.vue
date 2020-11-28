@@ -135,7 +135,10 @@
                   >{{ item.name }}</span
                 >
                 <div class="subTask">
-                  <draggable v-model="item.subTasks" @change="changeSubTaskSort(item.id)">
+                  <draggable
+                    v-model="item.subTasks"
+                    @change="changeSubTaskSort(item.id)"
+                  >
                     <transition-group>
                       <el-checkbox-group
                         v-model="checkSubTasks"
@@ -144,7 +147,7 @@
                         class="marginBottom"
                       >
                         <el-checkbox
-                           class="subTask-checkbox"
+                          class="subTask-checkbox"
                           :label="subItem.sub_id"
                           @change="
                             (isDone) => {
@@ -258,7 +261,7 @@ export default {
       this.newSubTask = []
 
       let notDoneTasks = await db.getTaskByParam('is_done', 0) // 获取所有未完成的任务
-      let doneTasks = await db.getTaskByShowDoneDay(this.showDoneDay) // 获取showDoneDay天内的已完成任务
+      let doneTasks = await db.getTaskByShowDoneDay(this.showDoneDay) // 获取 showDoneDay 天内的已完成任务
 
       // 主任务排序
       if (

@@ -57,6 +57,7 @@
 import storage from '../utils/storage.js'
 import datetime from '../utils/datetime.js'
 import db from '../utils/indexedDB.js'
+const notifier = require('node-notifier')
 
 export default {
   name: 'tomato-clock',
@@ -110,6 +111,7 @@ export default {
    * 初始化
    */
   mounted () {
+    // this.showNotification()
     this.workTime = storage.getItem('work-time') || 25
     this.restTime = storage.getItem('rest-time') || 5
     this.restSec = this.workTime * 60
@@ -147,8 +149,8 @@ export default {
           // 重置
           that.restSec = that.workTime * 60
           that.clock_time = datetime.formatClockTime(that.restSec)
-          // 创建番茄钟
-          that.completeClock()
+          // 提醒
+          // that.showNotification()
         }
       }, 1000)
     },
@@ -156,6 +158,30 @@ export default {
       db.createClock({
 
       })
+    },
+    showNotification () {
+      notifier.notify(
+        {
+          title: '番茄钟已完成！',
+          message: '专注了 xx 分钟！ 你真棒！',
+          sound: 'default',
+          wait: true,
+          // icon: require('../assets/notification.png'), // 图标
+          closeLabel: '详细设置',
+          actions: '完成',
+          sender: 'com.electron.time_manager'
+        },
+        function (err, response, metadata) {
+          if (err) throw err
+          // 点击详细设置
+          if (metadata.activationType === 'closed') {
+            console.log('这是点击了详细设置')
+          } else { // contentsClicked / actionClicked
+            // 点击完成
+            console.log('这是点击了完成', metadata)
+          }
+        }
+      )
     }
   }
 

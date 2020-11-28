@@ -1,6 +1,7 @@
 // 'use strict'
 import storage from '../renderer/utils/storage.js'
 import '../renderer/store'
+
 const console = require('console')
 const { app, ipcMain, BrowserWindow } = require('electron')
 let { menubar } = require('menubar')
@@ -14,11 +15,13 @@ const iconURL = process.env.NODE_ENV === 'development'
   ? `static/icon/logo.png`
   : `${__dirname}/static/icon/logo.png`
 
-// // 防止 electron 因为意外挂掉而不退出
+// 防止 electron 因为意外挂掉而不退出
 // process.on('uncaughtException', error => {
 //   console.error('Exception:', error)
 //   process.exit(1)
 // })
+
+app.setAppUserModelId('com.electron.time_manager')
 
 let mb = menubar({
   'index': winURL,

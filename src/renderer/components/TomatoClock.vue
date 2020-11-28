@@ -5,12 +5,12 @@
         <!-- 右半边半圆背景  -->
         <div class="pie_mod pie_right">
           <!-- 右边半圆 -->
-          <div class="pie"></div>
+          <div class="pie" ref="pie1"></div>
         </div>
         <!-- 左半边半圆背景  -->
         <div class="pie_mod pie_left">
           <!-- 左边半圆 -->
-          <div class="pie"></div>
+          <div class="pie" ref="pie2"></div>
         </div>
         <!-- 倒计时背景 -->
         <div class="clock_bg"></div>
@@ -77,7 +77,9 @@ export default {
       clockData: {
         'begin_time': null,
         'interrupt': []
-      }
+      },
+      secDeg: 0, // 每秒所占圆的度数
+      curDeg: 0 // 当前度数
     }
   },
   watch: {
@@ -89,12 +91,14 @@ export default {
       this.workTime = workTime
       if (!this.clockStart) {
         this.restSec = workTime * 60
+        this.secDeg = 360 / this.restSec // 计算每秒所占度数
         this.clock_time = datetime.formatClockTime(this.restSec)
       }
     },
     '$store.state.Reload.restTime' (restTime) { // 监听休息时间
       this.restTime = restTime
     },
+
     clockStart () { // 监听时钟开启与否
       this.clock_icon = this.clockStart ? 'el-icon-video-pause' : 'el-icon-video-play'
       if (this.clockStart) {
@@ -104,6 +108,16 @@ export default {
         let audio = this.$refs['audio']
         audio.pause()
         audio.currentTime = 0
+      }
+    },
+    curDeg (newDeg) {
+      let pie1 = this.$refs['pie1']
+      let pie2 = this.$refs['pie2']
+      if (newDeg <= 180) {
+        pie1.style['transform'] = `rotate(${newDeg}deg)`
+        pie2.style['transform'] = `rotate(0deg)`
+      } else {
+        pie2.style['transform'] = `rotate(${newDeg - 180}deg)`
       }
     }
   },
@@ -115,6 +129,7 @@ export default {
     this.workTime = storage.getItem('work-time') || 25
     this.restTime = storage.getItem('rest-time') || 5
     this.restSec = this.workTime * 60
+    this.secDeg = 360 / this.restSec // 计算每秒所占度数
     this.clock_time = datetime.formatClockTime(this.restSec)
     this.clock_bg_sound = require('../assets/' + (storage.getItem('clock-bg-sound') || 'dida.mp3'))
   },
@@ -139,16 +154,17 @@ export default {
     },
 
     updateTime (sec) { // 更新倒计时文字
-      let that = this
-      this.clockHandleId = setInterval(function () {
+      this.clockHandleId = setInterval(() => {
         sec = sec - 1
-        that.clock_time = datetime.formatClockTime(sec)
-        that.restSec = sec
+        this.curDeg = this.secDeg * (this.workTime * 60 - sec) // 更新当前度数
+        this.clock_time = datetime.formatClockTime(sec)
+        this.restSec = sec
         if (sec === 0) { // 到时间结束
-          that.clockStart = false
+          this.clockStart = false
           // 重置
-          that.restSec = that.workTime * 60
-          that.clock_time = datetime.formatClockTime(that.restSec)
+          this.restSec = this.workTime * 60
+          this.curDeg = 0
+          this.clock_time = datetime.formatClockTime(this.restSec)
           // 提醒
           // that.showNotification()
         }
@@ -215,9 +231,10 @@ export default {
  *  倒计时
  */
 .clock {
-  margin-left: 20%;
+  /* margin-left: 20%; */
   padding-top: 3%;
   zoom: 200%;
+  position: relative;
 }
 .pie_mod {
   width: 120px;
@@ -225,25 +242,28 @@ export default {
   position: absolute;
   z-index: 1;
 }
+.pie_mod .pie {
+  width: 120px;
+  height: 120px;
+  background-color:#f5cbb5;
+  border-radius: 50%;
+  position: absolute;
+}
 .pie_right,
 .pie_right .pie {
   clip: rect(0, 120px, 120px, 60px);
 }
+
 .pie_left,
 .pie_left .pie {
   clip: rect(0, 60px, 120px, 0);
 }
-.pie_mod .pie {
-  width: 120px;
-  height: 120px;
-  background: rgba(224, 164, 135, 0.7);
-  border-radius: 60px;
-  position: absolute;
-}
+
 .clock_bg {
   width: 120px;
   height: 120px;
-  background: rgba(256, 256, 256, 0.4);
+  /* background-color: red; */
+  background: #da9169;
   border-radius: 60px;
   position: absolute;
 }

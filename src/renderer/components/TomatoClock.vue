@@ -56,6 +56,7 @@
 <script >
 import storage from '../utils/storage.js'
 import datetime from '../utils/datetime.js'
+import db from '../utils/indexedDB.js'
 
 export default {
   name: 'tomato-clock',
@@ -71,7 +72,11 @@ export default {
       clock_time: '25:00',
       clockHandleId: null,
       clock_bg_sound: null, // 默认是嘀嗒
-      restSec: undefined // 剩余秒数
+      restSec: undefined, // 剩余秒数
+      clockData: {
+        'begin_time': null,
+        'interrupt': []
+      }
     }
   },
   watch: {
@@ -81,6 +86,10 @@ export default {
     },
     '$store.state.Reload.workTime' (workTime) { // 监听工作时间
       this.workTime = workTime
+      if (!this.clockStart) {
+        this.restSec = workTime * 60
+        this.clock_time = datetime.formatClockTime(this.restSec)
+      }
     },
     '$store.state.Reload.restTime' (restTime) { // 监听休息时间
       this.restTime = restTime
@@ -118,6 +127,9 @@ export default {
     },
 
     start () { // 开始计时
+      if (this.restSec === this.workTime * 60) { // 记录开始时间
+        this.clockData.begin_time = datetime.getNowDateTime()
+      }
       this.updateTime(this.restSec)
       setTimeout(() => {
         this.$refs['audio'].play()
@@ -130,7 +142,20 @@ export default {
         sec = sec - 1
         that.clock_time = datetime.formatClockTime(sec)
         that.restSec = sec
+        if (sec === 0) { // 到时间结束
+          that.clockStart = false
+          // 重置
+          that.restSec = that.workTime * 60
+          that.clock_time = datetime.formatClockTime(that.restSec)
+          // 创建番茄钟
+          that.completeClock()
+        }
       }, 1000)
+    },
+    completeClock () { // 创建番茄钟数据
+      db.createClock({
+
+      })
     }
   }
 
@@ -157,7 +182,7 @@ export default {
 }
 
 .taskInput {
-  margin-left: 3%;
+  margin-left: 8%;
   width: 84%;
 }
 /*

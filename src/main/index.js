@@ -1,7 +1,6 @@
 // 'use strict'
 import storage from '../renderer/utils/storage.js'
 import '../renderer/store'
-
 const console = require('console')
 const { app, ipcMain, BrowserWindow } = require('electron')
 let { menubar } = require('menubar')
@@ -15,11 +14,19 @@ const iconURL = process.env.NODE_ENV === 'development'
   ? `static/icon/logo.png`
   : `${__dirname}/static/icon/logo.png`
 
+// // 防止 electron 因为意外挂掉而不退出
+// process.on('uncaughtException', error => {
+//   console.error('Exception:', error)
+//   process.exit(1)
+// })
+
 let mb = menubar({
   'index': winURL,
   // 设置 icon
   'icon': iconURL,
   'browserWindow': {
+    'width': 380,
+    'height': 420,
     'transparent': true,
     // 'resizable': false,
     'webPreferences': {
@@ -31,6 +38,7 @@ let mb = menubar({
 
 // 隐藏 Dock 栏
 app.dock.hide()
+storage.clear()
 
 // 开机自动登录
 var launch = new AutoLaunch({

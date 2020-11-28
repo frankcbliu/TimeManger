@@ -42,15 +42,26 @@
       </div>
     </div>
     <div id="mid" v-show="activeName === 'two'">
-      <el-select v-model="clockSound" placeholder="请选择音频" @change="updateSound">
-        <el-option
-          v-for="item in options"
-          :key="item.value"
-          :label="item.label"
-          :value="item.value"
-        >
-        </el-option>
-      </el-select>
+      <div id="card" style="height: 18%">
+        <div>
+          <span style="width: 18%; font-size: 18px; line-height: 40px"
+            >背景音效</span
+          >
+          <el-select
+            v-model="clockSound"
+            placeholder="请选择音频"
+            @change="updateSound"
+          >
+            <el-option
+              v-for="item in options"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            >
+            </el-option>
+          </el-select>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -70,12 +81,13 @@ export default {
       options: [{
         value: 'dida.mp3',
         label: '嘀嗒'
+      },
+      {
+        value: 'fatiao.mp3',
+        label: '发条嘀嗒'
       }, {
         value: 'rain.mp3',
         label: '雨声'
-      }, {
-        value: '选项3',
-        label: '蚵仔煎'
       }]
     }
   },

@@ -1,42 +1,126 @@
 <template>
-  <div id="wrapper">
-    <div id="top">
-      <el-radio-group v-model="activeName" class="toggleBar" size="mini">
-        <el-radio-button label="one">
-          <i class="el-icon-finished"></i>
-        </el-radio-button>
-        <el-radio-button label="two">
-          <i class="el-icon-time"></i>
-        </el-radio-button>
-      </el-radio-group>
-    </div>
-    <div id="mid" v-show="activeName === 'one'">
-      <el-input
-        style="menu-input"
-        v-model="newTask"
-        placeholder="添加新任务"
-        size="small"
-        class="newTaskInput"
-        @change="createTask"
-        :class="{ scroll: isScroll }"
-      ></el-input>
-      <div class="tasks" ref="tasks">
-        <!-- 未完成的任务 -->
-        <template v-if="notDoneTasks.length > 0">
-          <draggable v-model="notDoneTasks">
-            <transition-group>
+  <div id="menu-bar">
+    <div class="triangle"></div>
+    <div id="wrapper">
+      <div id="top">
+        <el-radio-group v-model="activeName" class="toggleBar" size="mini">
+          <el-radio-button label="one">
+            <i class="el-icon-finished"></i>
+          </el-radio-button>
+          <el-radio-button label="two">
+            <i class="el-icon-time"></i>
+          </el-radio-button>
+        </el-radio-group>
+      </div>
+      <div id="mid" v-show="activeName === 'one'">
+        <el-input
+          style="menu-input"
+          v-model="newTask"
+          placeholder="添加新任务"
+          size="small"
+          class="newTaskInput"
+          @change="createTask"
+          :class="{ scroll: isScroll }"
+        ></el-input>
+        <div class="tasks" ref="tasks">
+          <!-- 未完成的任务 -->
+          <template v-if="notDoneTasks.length > 0">
+            <draggable v-model="notDoneTasks">
+              <transition-group>
+                <el-checkbox-group
+                  v-model="checkTasks"
+                  v-for="item in notDoneTasks"
+                  :key="`notDoneTasks${item.id}`"
+                  class="notDoneTask"
+                >
+                  <el-checkbox
+                    class="subTask-checkbox"
+                    :label="item.id"
+                    @change="
+                      (isDone) => {
+                        handleCheckedTask(item.id, +isDone, item.subTasks);
+                      }
+                    "
+                    >{{ "" }}</el-checkbox
+                  >
+                  <span
+                    class="taskName"
+                    :ref="`taskName${item.id}`"
+                    @click="editTaskName(item.id)"
+                    spellcheck="false"
+                    @keydown.enter.prevent="changeTaskName(item.id, item.name)"
+                    @blur.prevent="changeTaskName(item.id, item.name)"
+                    >{{ item.name }}</span
+                  >
+                  <div class="subTask">
+                    <el-checkbox-group
+                      v-model="checkSubTasks"
+                      v-for="subItem in item.subTasks"
+                      :key="`subtask${subItem.sub_id}`"
+                      class="marginBottom"
+                    >
+                      <el-checkbox
+                        style="zoom: 115%"
+                        :label="subItem.sub_id"
+                        @change="
+                          (isDone) => {
+                            handleCheckedSubTask(
+                              item.id,
+                              subItem.sub_id,
+                              +isDone
+                            );
+                          }
+                        "
+                        >{{ "" }}</el-checkbox
+                      >
+                      <span
+                        class="subTaskName"
+                        :ref="`subTaskName${subItem.sub_id}`"
+                        @click="editSubTaskName(subItem.sub_id)"
+                        spellcheck="false"
+                        @keydown.enter.prevent="
+                          changeSubTaskName(subItem.sub_id, subItem.sub_name)
+                        "
+                        @blur.prevent="
+                          changeSubTaskName(subItem.sub_id, subItem.sub_name)
+                        "
+                        >{{ subItem.sub_name }}</span
+                      >
+                    </el-checkbox-group>
+                    <el-input
+                      v-model="newSubTask[item.id]"
+                      placeholder="添加新子任务"
+                      size="mini"
+                      @change="
+                        (newSubTask) =>
+                          createSubTask(newSubTask, item.id, item.name)
+                      "
+                    ></el-input>
+                  </div>
+                </el-checkbox-group>
+              </transition-group>
+            </draggable>
+          </template>
+          <!-- 已完成的任务 -->
+          <template v-if="doneTasks.length > 0">
+            <div @click="clickShowDoneTasks" class="showDoneTasks marginBottom">
+              <i class="el-icon-arrow-up" v-if="isShowDoneTasks"></i>
+              <i class="el-icon-arrow-down" v-else></i>
+              完成的任务
+            </div>
+            <template v-if="isShowDoneTasks">
               <el-checkbox-group
                 v-model="checkTasks"
-                v-for="item in notDoneTasks"
-                :key="`notDoneTasks${item.id}`"
-                class="notDoneTask"
+                v-for="(item, index) in doneTasks"
+                :key="`doneTasks${index}`"
+                class="doneTask"
               >
                 <el-checkbox
-                  class="subTask-checkbox"
+                  class="task-checkbox"
                   :label="item.id"
                   @change="
                     (isDone) => {
-                      handleCheckedTask(item.id, +isDone, item.subTasks);
+                      handleCheckedTask(item.id, +isDone);
                     }
                   "
                   >{{ "" }}</el-checkbox
@@ -58,11 +142,15 @@
                     class="marginBottom"
                   >
                     <el-checkbox
-                      style="zoom: 115%"
+                      class="subTask-checkbox"
                       :label="subItem.sub_id"
                       @change="
                         (isDone) => {
-                          handleCheckedSubTask(item.id, subItem.sub_id, +isDone);
+                          handleCheckedSubTask(
+                            item.id,
+                            subItem.sub_id,
+                            +isDone
+                          );
                         }
                       "
                       >{{ "" }}</el-checkbox
@@ -72,117 +160,45 @@
                       :ref="`subTaskName${subItem.sub_id}`"
                       @click="editSubTaskName(subItem.sub_id)"
                       spellcheck="false"
-                      @keydown.enter.prevent="changeSubTaskName(subItem.sub_id, subItem.sub_name)"
-                      @blur.prevent="changeSubTaskName(subItem.sub_id, subItem.sub_name)"
+                      @keydown.enter.prevent="
+                        changeSubTaskName(subItem.sub_id, subItem.sub_name)
+                      "
+                      @blur.prevent="
+                        changeSubTaskName(subItem.sub_id, subItem.sub_name)
+                      "
                       >{{ subItem.sub_name }}</span
                     >
                   </el-checkbox-group>
                   <el-input
                     v-model="newSubTask[item.id]"
                     placeholder="添加新子任务"
+                    class="marginBottom"
                     size="mini"
                     @change="
-                      (newSubTask) => createSubTask(newSubTask, item.id, item.name)
+                      (newSubTask) =>
+                        createSubTask(
+                          newSubTask,
+                          item.id,
+                          item.name,
+                          item.is_done
+                        )
                     "
-                  ></el-input>
+                  />
                 </div>
               </el-checkbox-group>
-            </transition-group>
-          </draggable>
-        </template>
-        <!-- 已完成的任务 -->
-        <template v-if="doneTasks.length > 0">
-          <div @click="clickShowDoneTasks" class="showDoneTasks marginBottom">
-            <i class="el-icon-arrow-up" v-if="isShowDoneTasks"></i>
-            <i class="el-icon-arrow-down" v-else></i>
-            完成的任务
-          </div>
-          <template v-if="isShowDoneTasks">
-            <el-checkbox-group
-              v-model="checkTasks"
-              v-for="(item, index) in doneTasks"
-              :key="`doneTasks${index}`"
-              class="doneTask"
-            >
-              <el-checkbox
-                class="task-checkbox"
-                :label="item.id"
-                @change="
-                  (isDone) => {
-                    handleCheckedTask(item.id, +isDone);
-                  }
-                "
-                >{{ "" }}</el-checkbox
-              >
-              <span
-                class="taskName"
-                :ref="`taskName${item.id}`"
-                @click="editTaskName(item.id)"
-                spellcheck="false"
-                @keydown.enter.prevent="changeTaskName(item.id, item.name)"
-                @blur.prevent="changeTaskName(item.id, item.name)"
-                >{{ item.name }}</span
-              >
-              <div class="subTask">
-                <el-checkbox-group
-                  v-model="checkSubTasks"
-                  v-for="subItem in item.subTasks"
-                  :key="`subtask${subItem.sub_id}`"
-                  class="marginBottom"
-                >
-                  <el-checkbox
-                    class="subTask-checkbox"
-                    :label="subItem.sub_id"
-                    @change="
-                      (isDone) => {
-                        handleCheckedSubTask(item.id, subItem.sub_id, +isDone);
-                      }
-                    "
-                    >{{ "" }}</el-checkbox
-                  >
-                  <span
-                    class="subTaskName"
-                    :ref="`subTaskName${subItem.sub_id}`"
-                    @click="editSubTaskName(subItem.sub_id)"
-                    spellcheck="false"
-                    @keydown.enter.prevent="
-                      changeSubTaskName(subItem.sub_id, subItem.sub_name)
-                    "
-                    @blur.prevent="
-                      changeSubTaskName(subItem.sub_id, subItem.sub_name)
-                    "
-                    >{{ subItem.sub_name }}</span
-                  >
-                </el-checkbox-group>
-                <el-input
-                  v-model="newSubTask[item.id]"
-                  placeholder="添加新子任务"
-                  class="marginBottom"
-                  size="mini"
-                  @change="
-                    (newSubTask) =>
-                      createSubTask(
-                        newSubTask,
-                        item.id,
-                        item.name,
-                        item.is_done
-                      )
-                  "
-                />
-              </div>
-            </el-checkbox-group>
+            </template>
           </template>
-        </template>
+        </div>
       </div>
-    </div>
-    <div id="mid" v-show="activeName === 'two'">
-      <tomato-clock />
-    </div>
-    <div id="bottom">
-      <div></div>
-      <span style="margin: 1%; font-size: 25px" @click="openSetting">
-        <i class="el-icon-setting" style="color: #606266"></i>
-      </span>
+      <div id="mid" v-show="activeName === 'two'">
+        <tomato-clock />
+      </div>
+      <div id="bottom">
+        <div></div>
+        <span style="margin: 1%; font-size: 25px" @click="openSetting">
+          <i class="el-icon-setting" style="color: #606266"></i>
+        </span>
+      </div>
     </div>
   </div>
 </template>
@@ -357,6 +373,16 @@ export default {
 </script>
 
 <style scoped>
+.triangle {
+  position: relative;
+  width: 0;
+  height: 0;
+  border-right: 10px solid transparent;
+  border-bottom: 10px solid #f2f1f2;
+  border-left: 10px solid transparent;
+  left: 50%;
+  transform: translateX(-50%);
+}
 
 [contenteditable]:focus {
   outline: none;
@@ -402,7 +428,8 @@ export default {
   height: 85%;
   overflow-y: scroll;
 }
-.notDoneTask, .doneTask {
+.notDoneTask,
+.doneTask {
   padding: 10px 20px;
 }
 .notDoneTask:hover {
@@ -420,7 +447,8 @@ export default {
   font-weight: bold;
   color: #606266;
 }
-.taskName:hover, .subTaskName:hover {
+.taskName:hover,
+.subTaskName:hover {
   cursor: auto;
 }
 .subTaskName {

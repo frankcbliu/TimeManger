@@ -165,7 +165,7 @@ export default {
           this.curDeg = 0
           this.clock_time = datetime.formatClockTime(this.restSec)
           // 提醒
-          that.showNotification()
+          this.showNotification()
         }
       }, 1000)
     },

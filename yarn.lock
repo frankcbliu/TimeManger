@@ -3307,6 +3307,11 @@ electron-localshortcut@^3.0.0:
     keyboardevent-from-electron-accelerator "^2.0.0"
     keyboardevents-areequal "^0.2.1"
 
+electron-log@^4.3.0:
+  version "4.3.0"
+  resolved "https://r.cnpmjs.org/electron-log/download/electron-log-4.3.0.tgz#6e841a5c9af34ed3ca83e5a8a4156fdc39bed464"
+  integrity sha1-boQaXJrzTtPKg+WopBVv3Dm+1GQ=
+
 electron-positioner@^4.1.0:
   version "4.1.0"
   resolved "https://r.cnpmjs.org/electron-positioner/download/electron-positioner-4.1.0.tgz#e158f8f6aabd6725a8a9b4f2279b9504bcbea1b0"

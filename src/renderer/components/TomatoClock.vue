@@ -111,7 +111,6 @@ export default {
    * 初始化
    */
   mounted () {
-    // this.showNotification()
     this.workTime = storage.getItem('work-time') || 25
     this.restTime = storage.getItem('rest-time') || 5
     this.restSec = this.workTime * 60
@@ -150,16 +149,20 @@ export default {
           that.restSec = that.workTime * 60
           that.clock_time = datetime.formatClockTime(that.restSec)
           // 提醒
-          // that.showNotification()
+          that.showNotification()
         }
       }, 1000)
     },
-    completeClock () { // 创建番茄钟数据
+    completeClock (isMain) { // 创建番茄钟数据
+      let that = this
       db.createClock({
-
+        'is_main': isMain,
+        'begin_time': that.clockData.begin_time,
+        'interrupt': that.clockData.interrupt
       })
     },
     showNotification () {
+      let that = this
       notifier.notify(
         {
           title: '番茄钟已完成！',
@@ -169,7 +172,8 @@ export default {
           // icon: require('../assets/notification.png'), // 图标
           closeLabel: '详细设置',
           actions: '完成',
-          sender: 'com.electron.time_manager'
+          sender: 'com.electron.timemanager' // 见 Info.plist 文件中的 CFBundleIdentifier 字段 https://github.com/julienXX/terminal-notifier
+          // sender: 'com.apple.Safari'
         },
         function (err, response, metadata) {
           if (err) throw err
@@ -179,6 +183,7 @@ export default {
           } else { // contentsClicked / actionClicked
             // 点击完成
             console.log('这是点击了完成', metadata)
+            that.completeClock()
           }
         }
       )

@@ -15,11 +15,22 @@ const iconURL = process.env.NODE_ENV === 'development'
   ? `static/icon/logo.png`
   : `${__dirname}/static/icon/logo.png`
 
+// 日志文件
+if (process.env.NODE_ENV === 'production') {
+  const log = require('electron-log')
+  // 重写 console 的方法，日志会在控制台输出，并且输出到本地文件。具体用法参考官方文档
+  Object.assign(console, log.functions)
+  // 获取本地日志文件路径
+  console.log('-----------------------启动日志-----------------------')
+  console.log('日志文件路径：', log.transports.file.getFile().path)
+  console.log('-----------------------------------------------------')
+}
+
 // 防止 electron 因为意外挂掉而不退出
-// process.on('uncaughtException', error => {
-//   console.error('Exception:', error)
-//   process.exit(1)
-// })
+process.on('uncaughtException', error => {
+  console.error('Exception:', error)
+  process.exit(1)
+})
 
 app.setAppUserModelId('com.electron.time_manager')
 
@@ -115,6 +126,7 @@ function openSettingWindow () {
 
   win.loadURL(winURL + '#/setting').then(() => {
     // win.setTitle('Prefrence')
+    // win.webContents.openDevTools({ mode: 'detach' })
   })
   win.on('closed', () => {
     win = null

@@ -77,9 +77,17 @@ export default {
 
   // 往指定数据表中添加数据
   db_add (tableName, item) {
-    this.db.transaction([tableName], 'readwrite')
-      .objectStore(tableName)
-      .add(item)
+    let objectStore = this.db.transaction([tableName], 'readwrite').objectStore(tableName)
+    let request = objectStore.add(item)
+
+    return new Promise((resolve, reject) => {
+      request.onerror = function (event) {
+        reject(new Error('往指定数据表中添加数据失败'))
+      }
+      request.onsuccess = function (event) {
+        resolve(request.result) // 返回值为新数据的主键值
+      }
+    })
   },
 
   /**********************************************************************
@@ -88,19 +96,19 @@ export default {
 
   // 创建主任务
   createTask (data) {
-    this.db_add('task', data)
+    return this.db_add('task', data)
   },
 
   // 创建子任务
   createSubTask (data) {
-    this.db_add('sub_task', data)
+    return this.db_add('sub_task', data)
   },
 
   // 创建番茄钟
   createClock (data) {
     // 开始时间
     data['begin_time'] = datetime.getNowDateTime()
-    this.db_add('clock', data)
+    return this.db_add('clock', data)
   },
 
   /**********************************************************************

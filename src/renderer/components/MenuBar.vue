@@ -135,40 +135,44 @@
                   >{{ item.name }}</span
                 >
                 <div class="subTask">
-                  <el-checkbox-group
-                    v-model="checkSubTasks"
-                    v-for="subItem in item.subTasks"
-                    :key="`subtask${subItem.sub_id}`"
-                    class="marginBottom"
-                  >
-                    <el-checkbox
-                      class="subTask-checkbox"
-                      :label="subItem.sub_id"
-                      @change="
-                        (isDone) => {
-                          handleCheckedSubTask(
-                            item.id,
-                            subItem.sub_id,
-                            +isDone
-                          );
-                        }
-                      "
-                      >{{ "" }}</el-checkbox
-                    >
-                    <span
-                      class="subTaskName"
-                      :ref="`subTaskName${subItem.sub_id}`"
-                      @click="editSubTaskName(subItem.sub_id)"
-                      spellcheck="false"
-                      @keydown.enter.prevent="
-                        changeSubTaskName(subItem.sub_id, subItem.sub_name)
-                      "
-                      @blur.prevent="
-                        changeSubTaskName(subItem.sub_id, subItem.sub_name)
-                      "
-                      >{{ subItem.sub_name }}</span
-                    >
-                  </el-checkbox-group>
+                  <draggable v-model="item.subTasks" @change="changeSubTaskSort(item.id)">
+                    <transition-group>
+                      <el-checkbox-group
+                        v-model="checkSubTasks"
+                        v-for="subItem in item.subTasks"
+                        :key="`subtask${subItem.sub_id}`"
+                        class="marginBottom"
+                      >
+                        <el-checkbox
+                           class="subTask-checkbox"
+                          :label="subItem.sub_id"
+                          @change="
+                            (isDone) => {
+                              handleCheckedSubTask(
+                                item.id,
+                                subItem.sub_id,
+                                +isDone
+                              );
+                            }
+                          "
+                          >{{ "" }}</el-checkbox
+                        >
+                        <span
+                          class="subTaskName"
+                          :ref="`subTaskName${subItem.sub_id}`"
+                          @click="editSubTaskName(subItem.sub_id)"
+                          spellcheck="false"
+                          @keydown.enter.prevent="
+                            changeSubTaskName(subItem.sub_id, subItem.sub_name)
+                          "
+                          @blur.prevent="
+                            changeSubTaskName(subItem.sub_id, subItem.sub_name)
+                          "
+                          >{{ subItem.sub_name }}</span
+                        >
+                      </el-checkbox-group>
+                    </transition-group>
+                  </draggable>
                   <el-input
                     v-model="newSubTask[item.id]"
                     placeholder="添加新子任务"
@@ -207,6 +211,8 @@
 import db from '../utils/indexedDB.js'
 import TomatoClock from './TomatoClock.vue'
 import draggable from 'vuedraggable'
+import datetime from '../utils/datetime'
+import storage from '../utils/storage.js'
 // 需要用到 electron
 const { remote, ipcRenderer } = require('electron')
 const { Menu, MenuItem } = remote
@@ -214,22 +220,22 @@ const { Menu, MenuItem } = remote
 export default {
   name: 'menu-bar',
   components: {
-    TomatoClock, draggable
+    TomatoClock,
+    draggable
   },
   data () {
     return {
       activeName: 'one',
-      store: null,
-      isShowDoneTasks: false,
-      checkTasks: [], // 主任务选中的id
-      checkSubTasks: [],
-      tasks: [], // 所有任务
       notDoneTasks: [], // 未完成的任务
       doneTasks: [], // 已完成的任务
+      isShowDoneTasks: false,
+      checkTasks: [], // 选中的主任务id
+      checkSubTasks: [], // 选中的主任务id
       newTask: '',
       newSubTask: [],
       isScroll: false, // 监听滚轮是否滚动
-      taskSort: []
+      taskSort: [],
+      notDoneTasksSort: storage.getItem('not-done-tasks-sort')
     }
   },
   async mounted () {
@@ -240,24 +246,40 @@ export default {
       this.isScroll = !!tasksRef.scrollTop
     })
   },
-  updated () {
-    console.log(this.notDoneTasks)
+  computed: {
+    showDoneDay () {
+      return storage.getItem('show-done-day') || 1
+    }
   },
   methods: {
     async init () {
-      this.checkNotDoneTasks = []
-      this.checkDoneTasks = []
+      // 重置新增的任务和子任务
       this.newTask = ''
       this.newSubTask = []
 
-      this.tasks = await db.getAllTask()
-      // this.notDoneTasks = await db.getTaskByIsDone
+      let notDoneTasks = await db.getTaskByParam('is_done', 0) // 获取所有未完成的任务
+      let doneTasks = await db.getTaskByShowDoneDay(this.showDoneDay) // 获取showDoneDay天内的已完成任务
 
-      let notDoneTasks = []
-      let doneTasks = []
+      // 主任务排序
+      if (
+        this.notDoneTasksSort &&
+        this.notDoneTasksSort.length === notDoneTasks.length
+      ) {
+        let tempObj = {}
+        for (let item of notDoneTasks) {
+          tempObj[item.id] = item
+        }
+        console.log(tempObj)
+        notDoneTasks = []
+        for (let id of this.notDoneTasksSort) {
+          notDoneTasks.push(tempObj[id])
+        }
+      }
+
       let checkTasks = []
       let checkSubTasks = []
-      for (let item of this.tasks) {
+      let notDoneTasksSort = []
+      for (let item of [...notDoneTasks, ...doneTasks]) {
         item.subTasks = await db.getSubTaskById(item.id) // 获取子任务
         for (let subItem of item.subTasks) {
           if (subItem.is_done) {
@@ -265,103 +287,159 @@ export default {
           }
         }
         if (item.is_done) {
-          doneTasks.push(item)
           checkTasks.push(item.id)
         } else {
-          notDoneTasks.push(item)
+          if (
+            !(
+              this.notDoneTasksSort &&
+              this.notDoneTasksSort.length === this.notDoneTasks.length
+            )
+          ) {
+            // 如果缓存里有notDoneTasksSort且长度和notDoneTasks一致，则不执行更新操作
+            notDoneTasksSort.push(item.id)
+          }
         }
       }
       this.doneTasks = doneTasks
       this.notDoneTasks = notDoneTasks
       this.checkTasks = checkTasks
       this.checkSubTasks = checkSubTasks
-      // console.log(this.notDoneTasks)
-      // console.log(this.doneTasks)
+
+      if (
+        !(
+          this.notDoneTasksSort &&
+          this.notDoneTasksSort.length === this.notDoneTasks.length
+        )
+      ) {
+        // 如果缓存里有notDoneTasksSort且长度和notDoneTasks一致，则不执行更新操作
+        this.notDoneTasksSort = notDoneTasksSort
+        storage.setItem('not-done-tasks-sort', notDoneTasksSort) // 更新缓存
+      }
+      console.log(this.notDoneTasksSort)
+      console.log(this.notDoneTasks)
+      console.log(this.doneTasks)
     },
-    clickShowDoneTasks () { // 是否显示已完成的任务
+    clickShowDoneTasks () {
+      // 是否显示已完成的任务
       this.isShowDoneTasks = !this.isShowDoneTasks
     },
-    createTask (newTask) { // 创建主任务
+    async createTask (newTask) {
+      // 创建主任务
       if (this.newTask) {
-        db.createTask({
-          'name': newTask,
-          'is_done': 0,
-          'sum_time': 0
+        await db.createTask({
+          name: newTask,
+          is_done: 0,
+          sum_time: 0,
+          done_date: 0
         })
         this.init()
       }
     },
-    createSubTask (newSubTask, id, name, isDone) { // 创建子任务
+    async createSubTask (newSubTask, id, name, isDone) {
+      // 创建子任务
       if (this.newSubTask) {
-        if (isDone) { // 如果主任务已经完成，置为未完成
-          db.setTaskIsDone(id, 0)
+        if (isDone) {
+          // 如果主任务已经完成，置为未完成
+          await db.setTaskParam(id, { is_done: 0, done_date: 0 })
         }
-        db.createSubTask({
-          'id': id,
-          'name': name,
-          'sub_name': newSubTask,
-          'is_done': 0,
-          'sum_time': 0
+        await db.createSubTask({
+          id: id,
+          name: name,
+          sub_name: newSubTask,
+          is_done: 0,
+          sum_time: 0
         })
         this.init()
       }
     },
-    async handleCheckedTask (id, isDone, subTasks) { // 更改主任务状态
-      await db.setTaskIsDone(id, isDone)
-      if (isDone) { // 如果已完成，子任务默认为全部完成
+    async handleCheckedTask (id, isDone, subTasks) {
+      // 更改主任务状态
+      if (isDone) {
+        // 如果已完成，子任务默认为全部完成
+        await db.setTaskParam(id, {
+          is_done: isDone,
+          done_date: datetime.getTimeStamp()
+        })
         for (let subItem of subTasks) {
-          await db.setSubTaskIsDone(subItem.sub_id, 1)
+          await db.setSubTaskParam(subItem.sub_id, { is_done: 1 })
         }
+      } else {
+        await db.setTaskParam(id, { is_done: isDone, done_date: 0 })
       }
       this.init()
     },
-    async handleCheckedSubTask (id, subId, isDone) { // 更改子任务状态
-      await db.setSubTaskIsDone(subId, isDone)
-      if (!isDone) { // 如果未完成，主任务默认为为完成
-        await db.setTaskIsDone(id, 0)
+    async handleCheckedSubTask (id, subId, isDone) {
+      // 更改子任务状态
+      await db.setSubTaskParam(subId, { is_done: isDone })
+      if (!isDone) {
+        // 如果子任务设为未完成，主任务也设为未完成
+        await db.setTaskParam(id, { is_done: 0, done_date: 0 })
       }
       this.init()
     },
-    editTaskName (id) { // 主任务名设为可编辑
+    editTaskName (id) {
+      // 主任务名设为可编辑
       this.$refs[`taskName${id}`][0].contentEditable = true
     },
-    changeTaskName (id, oldTaskName) { // 修改主任务名
+    async changeTaskName (id, oldTaskName) {
+      // 修改主任务名
       let taskNameRef = this.$refs[`taskName${id}`][0]
       let newTaskName = taskNameRef.innerHTML
       if (newTaskName !== oldTaskName) {
-        db.setTaskParam(id, { 'name': newTaskName })
+        await db.setTaskParam(id, { name: newTaskName })
         this.init()
       }
       taskNameRef.blur()
     },
-    editSubTaskName (subId) { // 子任务名设为可编辑
+    editSubTaskName (subId) {
+      // 子任务名设为可编辑
       this.$refs[`subTaskName${subId}`][0].contentEditable = true
     },
-    changeSubTaskName (subId, oldSubTaskName) { // 修改子任务名
+    async changeSubTaskName (subId, oldSubTaskName) {
+      // 修改子任务名
       let subTaskNameRef = this.$refs[`subTaskName${subId}`][0]
       let newSubTaskName = subTaskNameRef.innerHTML
       if (newSubTaskName !== oldSubTaskName) {
-        db.setSubTaskParam(subId, { 'sub_name': newSubTaskName })
+        await db.setSubTaskParam(subId, { sub_name: newSubTaskName })
         this.init()
       }
       subTaskNameRef.blur()
     },
+    changeTaskSort () {
+      // 改变未完成的任务排序
+      let notDoneTasksSort = []
+      for (let item of this.notDoneTasks) {
+        notDoneTasksSort.push(item.id)
+      }
+      this.notDoneTasksSort = notDoneTasksSort
+      storage.setItem('not-done-tasks-sort', this.notDoneTasksSort) // 更新缓存
+      console.log(this.notDoneTasksSort)
+    },
+    changeSubTaskSort () {
+      // 改变子任务排序
+      // console.log(this.notDoneTasksSort)
+    },
     openSetting () {
+      // 打开设置
       console.log('open setting')
       // 右键菜单
       const menu = new Menu()
-      menu.append(new MenuItem({
-        label: '偏好设置',
-        click: function () {
-          ipcRenderer.send('setting')
-        }
-      }))
-      menu.append(new MenuItem({
-        label: '退出',
-        click: function () {
-          ipcRenderer.send('exit')
-        }
-      }))
+      menu.append(
+        new MenuItem({
+          label: '偏好设置',
+          click: function () {
+            ipcRenderer.send('setting')
+          }
+        })
+      )
+      menu.append(
+        new MenuItem({
+          label: '退出',
+          click: function () {
+            ipcRenderer.send('exit')
+          }
+        })
+      )
 
       // 第二个菜单
       // menu.append( ... )

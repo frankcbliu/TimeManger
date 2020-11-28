@@ -1,12 +1,18 @@
 
 export default {
-
   getNowDate () { // 获取当前日期
     let time = new Date()
     let y = time.getFullYear()
     let M = time.getMonth() + 1
     let d = time.getDate()
     return y + '-' + M + '-' + d
+  },
+  /**
+   * 获取日期时间戳（秒为单位）
+   * @param {Number}} offset offset 为偏移的天数，默认为0，即当前时间
+   */
+  getTimeStamp (offset = 0) {
+    return new Date(this.getNowDate()) / 1000 - 60 * 60 * 24 * offset
   },
 
   getNowDateTime () { // 获取当前的日期和时间

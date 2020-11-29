@@ -52,6 +52,7 @@
                     @blur.prevent="changeTaskName(item.id, item.name)"
                     >{{ item.name }}</span
                   >
+                  <div class="taskExpand" @click="taskExpand(item.id, item.isDone, item.subTasks)">···</div>
                   <div class="subTasks">
                     <draggable
                       v-model="item.subTasks"
@@ -98,6 +99,7 @@
                             "
                             >{{ subItem.sub_name }}</span
                           >
+                          <div class="taskExpand" @click="subTaskExpand(subItem.sub_id, item.id, subItem.is_done)">···</div>
                         </el-checkbox-group>
                       </transition-group>
                     </draggable>
@@ -149,6 +151,7 @@
                   @blur.prevent="changeTaskName(item.id, item.name)"
                   >{{ item.name }}</span
                 >
+                <div class="taskExpand" @click="taskExpand(item.id, item.is_done, item.subTasks)">···</div>
                 <div class="subTasks">
                   <el-checkbox-group
                     v-model="checkSubTasks"
@@ -379,7 +382,6 @@ export default {
           sum_time: 0,
           done_date: 0
         }, this.$store)
-        this.init()
       }
     },
     /**
@@ -390,6 +392,8 @@ export default {
         if (isDone) {
           // 如果主任务已经完成，置为未完成
           await db.setTaskParam(id, { is_done: 0, done_date: 0 })
+          this.todoTasksSort.push(id)
+          this.$store.dispatch('updateTodoTasksSort', this.todoTasksSort)
         }
         let newSubId = await db.createSubTask({
           id: id,
@@ -420,7 +424,6 @@ export default {
       } else {
         this.todoTasksSort.push(id) // 未完成则往缓存里添加id
       }
-      console.log(this.todoTasksSort)
       this.$store.dispatch('updateTodoTasksSort', this.todoTasksSort)
       // this.init()
     },
@@ -483,6 +486,7 @@ export default {
       }
       this.$store.dispatch('updateTodoTasksSort', todoTasksSort)
     },
+
     /**
      * 改变子任务排序
      */
@@ -494,6 +498,72 @@ export default {
       this.todoSubTaskSort[id] = tempSort
       storage.setItem('todo-sub-tasks-sort', this.todoSubTaskSort) // 更新缓存
     },
+    /**
+     * 点击主任务的···
+     */
+    taskExpand (id, isDone, subTasks) {
+      let that = this
+      const menu = new Menu()
+      menu.append(
+        new MenuItem({
+          label: '删除',
+          click: function () {
+            db.deleteTask(id) // 删除主任务
+            if (!isDone) { // 未完成
+              // 删除缓存
+              that.todoTasksSort = that.removeArrValue(that.todoTasksSort, id) // 删除缓存里的id
+              that.$store.dispatch('updateTodoTasksSort', that.todoTasksSort)
+            }
+            for (let subItem of subTasks) { // 删除所有子任务
+              db.deleteSubTask(subItem.sub_id)
+            }
+            that.init()
+          }
+        })
+      )
+      menu.append(
+        new MenuItem({
+          label: '编辑',
+          click: function () {
+            console.log('edit')
+          }
+        })
+      )
+      // 展示出来
+      menu.popup(remote.getCurrentWindow())
+    },
+    /**
+     * 点击子任务的···
+     */
+    subTaskExpand (subId, id, isDone) {
+      let that = this
+      const menu = new Menu()
+      menu.append(
+        new MenuItem({
+          label: '删除',
+          click: function () {
+            db.deleteSubTask(subId) // 删除主任务
+            if (!isDone) { // 未完成
+              // 删除缓存
+              that.todoSubTaskSort[id] = that.removeArrValue(that.todoSubTaskSort[id], subId) // 删除缓存里的subId
+              storage.setItem('todo-sub-tasks-sort', that.todoSubTaskSort) // 更新缓存
+            }
+            that.init()
+          }
+        })
+      )
+      menu.append(
+        new MenuItem({
+          label: '编辑',
+          click: function () {
+            console.log('edit')
+          }
+        })
+      )
+      // 展示出来
+      menu.popup(remote.getCurrentWindow())
+    },
+
     openSetting () {
       // 打开设置
       console.log('open setting')
@@ -601,6 +671,7 @@ export default {
 }
 .todoTask,
 .doneTask {
+  position: relative;
   padding: 10px 20px;
 }
 .todoTask:hover {
@@ -617,6 +688,15 @@ export default {
   font-size: 20px;
   font-weight: bold;
   color: #606266;
+}
+.taskExpand {
+  display: inline-block;
+  position: absolute;
+  right: 20px;
+  font-size: 20px;
+  font-weight: bold;
+  color: #606266;
+  cursor: pointer;
 }
 
 .showDoneTasks {

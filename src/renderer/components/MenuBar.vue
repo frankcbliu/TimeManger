@@ -256,10 +256,10 @@ export default {
       this.init()
     }
   },
-  // created () { // 删除缓存，测试用
-  //   db.clear()
-  //   storage.clear()
-  // },
+  created () { // 删除缓存，测试用
+    db.clear()
+    storage.clear()
+  },
   async mounted () {
     await db.initDB()
     this.init()

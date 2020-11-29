@@ -106,7 +106,6 @@ export default {
       }
     },
     updateWorkTime () { // 工作时间
-      console.log('修改工作时间', this.workTime)
       storage.setItem('work-time', this.workTime)
       this.$store.dispatch('changeWorkTime', this.workTime)
     },

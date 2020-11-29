@@ -89,8 +89,9 @@ export default {
   },
   watch: {
     '$store.state.Reload.reloadSound' (sound) { // 监听音频配置
-      this.clock_bg_sound = require('../assets/' + (sound || 'dida.mp3'))
+      console.log('监听到音频变化')
       this.clockStatus = 'pending'
+      this.clock_bg_sound = require('../assets/' + (sound || 'dida.mp3'))
     },
     '$store.state.Reload.workTime' (workTime) { // 监听工作时间
       this.workTime = workTime

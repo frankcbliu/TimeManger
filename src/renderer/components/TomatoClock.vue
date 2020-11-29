@@ -240,6 +240,8 @@ export default {
   padding-top: 3%;
   zoom: 200%;
   position: relative;
+  display: flex;
+  justify-content: center;
 }
 .pie_mod {
   width: 120px;
@@ -275,7 +277,7 @@ export default {
 .clock_time {
   width: 110px;
   height: 110px;
-  margin: 5px 0 0 5px;
+  margin-top: 5px;
   background-color: #e2a48f;
   border-radius: 56.25px;
   position: absolute;
@@ -287,7 +289,7 @@ export default {
   user-select: none;
 }
 .clock_button {
-  margin: 80px 0 0 40px;
+  margin-top: 80px;
   width: 40px;
   height: 40px;
   line-height: 40px;

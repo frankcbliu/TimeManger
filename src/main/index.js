@@ -138,8 +138,8 @@ function openSettingWindow () {
 function openCompleteWindow () {
   completeWin = new BrowserWindow({
     title: 'TimeManager',
-    height: 320,
-    width: 260,
+    height: 450,
+    width: 300,
     x: 520,
     y: 180,
     useContentSize: true,

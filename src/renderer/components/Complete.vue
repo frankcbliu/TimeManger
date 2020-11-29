@@ -370,6 +370,7 @@ body {
   margin: 2% 5px;
   border-radius: 5px;
 }
+
 .taskList {
   border-bottom: 1px solid #ddd;
   height: 66%;
@@ -394,6 +395,9 @@ body {
 .todoTask {
   padding: 5px;
   position: relative;
+}
+.todoTask:hover, .subTask:hover {
+  background-color: #e5e3e6;
 }
 .subTask {
   margin-left: 20px;
@@ -421,7 +425,7 @@ body {
   align-items: center;
 }
 .check {
-  background-color: #f5cbb5;
+  background-color: #f5cbb5 !important;
 }
 .pointer {
   cursor: pointer;

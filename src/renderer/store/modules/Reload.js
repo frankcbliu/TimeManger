@@ -4,7 +4,8 @@ const state = {
   reloadSound: (storage.getItem('clock-bg-sound') || 'dida.mp3'),
   workTime: storage.getItem('work-time') || 25,
   restTime: storage.getItem('rest-time') || 5,
-  todoTasksSort: storage.getItem('todo-tasks-sort') || []
+  todoTasksSort: storage.getItem('todo-tasks-sort') || [],
+  clockStatus: 0
 }
 
 const mutations = {
@@ -26,6 +27,9 @@ const mutations = {
     temp.push(id)
     state.todoTasksSort = temp
     storage.setItem('todo-tasks-sort', temp)
+  },
+  RESET_CLOCK_STATUS (state) {
+    state.clockStatus++
   }
 }
 
@@ -44,6 +48,9 @@ const actions = {
   },
   pushTodoTasksSort ({ commit }, id) {
     commit('PUSH_TODO_TASKS_SORT', id)
+  },
+  resetClockStatus ({ commit }) {
+    commit('RESET_CLOCK_STATUS')
   }
 }
 

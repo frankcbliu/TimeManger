@@ -162,7 +162,7 @@ checkAutoLaunch()
 
 mb.on('ready', function ready () {
   console.log('app is ready')
-  openCompleteWindow()
+  // openCompleteWindow()
 })
 
 // 开启配置选项
@@ -177,7 +177,7 @@ ipcMain.on('complete', () => {
 
 // 放弃番茄钟，关闭
 ipcMain.on('complete-close', () => {
-  completeWin = null
+  completeWin.close()
 })
 
 // // 刷新时钟界面

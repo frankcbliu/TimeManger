@@ -99,8 +99,13 @@ export default {
     }
   },
   watch: {
+    '$store.state.Reload.clockStatus' () { // 刷新状态
+      this.clockStatus = 'init'
+      this.taskName = ''
+      this.input_icon = 'el-icon-edit'
+    },
     '$store.state.Reload.reloadSound' (sound) { // 监听音频配置
-      this.clockStatus = 'pending'
+      if (this.clockStatus !== 'init') { this.clockStatus = 'pending' }
       this.clock_bg_sound = require('../assets/' + (sound || 'dida.mp3'))
     },
     '$store.state.Reload.workTime' (workTime) { // 监听工作时间
@@ -266,6 +271,7 @@ export default {
           if (metadata.activationType === 'closed') {
             ipcRenderer.send('complete')
           } else { // contentsClicked / actionClicked
+            console.log(metadata.activationType)
             // 点击完成
             if (that.taskName !== '') { // 任务名非空，默认创建主任务
               that.completeMainTaskClock()

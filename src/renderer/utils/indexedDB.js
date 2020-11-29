@@ -116,10 +116,29 @@ export default {
     return this.db_add('sub_task', data)
   },
 
-  // 创建子任务和番茄钟
+  // 更新主任务的番茄钟数量和时间，创建子任务和番茄钟
   createSubTaskAndClock (data) {
-    this.getTaskByParam('id', data.id).then((task) => {
+    let that = this
+    this.bindClockTask({
+      'id': data.id,
+      'cost': data.cost
+    }).then((task) => { // 获取主任务名称
+      that.createSubTask({
+        'name': task.name,
+        'id': task.id,
+        'sub_name': data.name,
+        'sub_count': 1
+      }).then((res) => {
+        that.createClock({
+          'name': res.sub_name,
+          'task_id': res.sub_id,
+          'is_main': false,
+          'begin_time': data.begin_time,
+          'interrupt': data.interrupt
+        }).then((res) => {
 
+        })
+      })
     })
   },
 

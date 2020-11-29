@@ -242,7 +242,7 @@ export default {
       doneTasks: [], // 已完成的任务
       isShowDoneTasks: false,
       checkTasks: [], // 选中的主任务id
-      checkSubTasks: [], // 选中的主任务id
+      checkSubTasks: [], // 选中的子任务id
       newTask: '',
       newSubTask: [],
       isScroll: false, // 监听滚轮是否滚动
@@ -335,7 +335,7 @@ export default {
       return todoTasks
     },
     /**
-     * 未完成的主任务下的子任务排序
+     * 初始化未完成的主任务下的子任务顺序
      */
     subTaskSort (todoSubTasks, id) {
       let tempSort = []

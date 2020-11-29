@@ -237,7 +237,7 @@ export default {
   },
   data () {
     return {
-      activeName: 'two',
+      activeName: 'one',
       todoTasks: [], // 未完成的任务
       doneTasks: [], // 已完成的任务
       isShowDoneTasks: false,
@@ -250,7 +250,14 @@ export default {
       todoSubTaskSort: storage.getItem('todo-sub-tasks-sort') // 未完成的子任务排序 {id: [subId]}
     }
   },
+  watch: {
+    '$store.state.Reload.todoTasksSort' (todoTasksSort) {
+      this.todoTasksSort = todoTasksSort
+      this.init()
+    }
+  },
   // created () { // 删除缓存，测试用
+  //   db.clear()
   //   storage.clear()
   // },
   async mounted () {
@@ -305,10 +312,9 @@ export default {
       // console.log(this.doneTasks)
     },
     /**
-     * 未完成的主任务排序
+     * 初始化未完成的主任务列表顺序
      */
     taskSort (todoTasks) {
-      let todoTasksSort = []
       if (this.todoTasksSort) {
         let tempObj = {}
         for (let item of todoTasks) { // 生成{id: {}}的对象，方便后续获取
@@ -319,12 +325,12 @@ export default {
           todoTasks.push(tempObj[id])
         }
       } else {
+        let todoTasksSort = []
         // 如果缓存里有不存在todoTasksSort，则执行更新操作
         for (let item of todoTasks) {
           todoTasksSort.push(item.id)
         }
-        this.todoTasksSort = todoTasksSort
-        storage.setItem('todo-tasks-sort', this.todoTasksSort) // 更新缓存
+        this.$store.dispatch('updateTodoTasksSort', todoTasksSort)
       }
       return todoTasks
     },
@@ -367,14 +373,12 @@ export default {
      */
     async createTask (newTask) {
       if (this.newTask) {
-        let newId = await db.createTask({
+        await db.createTask({
           name: newTask,
           is_done: 0,
           sum_time: 0,
           done_date: 0
-        })
-        this.todoTasksSort.push(newId) // 缓存添加新id
-        storage.setItem('todo-tasks-sort', this.todoTasksSort) // 更新缓存
+        }, this.$store)
         this.init()
       }
     },
@@ -407,19 +411,19 @@ export default {
         is_done: isDone,
         done_date: isDone ? datetime.getTimeStamp() : 0
       })
+      let todoTasksSort = this.todoTasksSort
       if (isDone) {
         // 如果已完成，子任务默认为全部完成
         for (let subItem of subTasks) {
           await db.setSubTaskParam(subItem.sub_id, { is_done: 1 })
         }
-        this.todoTasksSort = this.removeArrValue(this.todoTasksSort, id) // 删除缓存里的id
-        storage.setItem('todo-tasks-sort', this.todoTasksSort) // 更新缓存
-        // delete this.todoSubTaskSort[id] // 删除缓存里对应的子任务
+        todoTasksSort = this.removeArrValue(todoTasksSort, id) // 删除缓存里的id
       } else {
-        this.todoTasksSort.push(id) // 未完成则往缓存里添加id
-        storage.setItem('todo-tasks-sort', this.todoTasksSort) // 更新缓存
+        todoTasksSort.push(id) // 未完成则往缓存里添加id
       }
-      this.init()
+      console.log(todoTasksSort)
+      this.$store.dispatch('updateTodoTasksSort', todoTasksSort)
+      // this.init()
     },
     /**
      * 更改子任务状态
@@ -430,7 +434,7 @@ export default {
         // 如果子任务设为未完成且主任务为已完成，主任务设为未完成
         await db.setTaskParam(id, { is_done: 0, done_date: 0 })
         this.todoTasksSort.push(id)
-        storage.setItem('todo-tasks-sort', this.todoTasksSort) // 更新缓存
+        this.$store.dispatch('updateTodoTasksSort', this.todoTasksSort)
       }
       this.init()
     },
@@ -471,15 +475,14 @@ export default {
       subTaskNameRef.blur()
     },
     /**
-     * 改变未完成的任务排序
+     * 改变未完成的任务顺序
      */
     changeTaskSort () {
       let todoTasksSort = []
       for (let item of this.todoTasks) {
         todoTasksSort.push(item.id)
       }
-      this.todoTasksSort = todoTasksSort
-      storage.setItem('todo-tasks-sort', this.todoTasksSort) // 更新缓存
+      this.$store.dispatch('updateTodoTasksSort', todoTasksSort)
     },
     /**
      * 改变子任务排序

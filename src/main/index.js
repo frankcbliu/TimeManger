@@ -52,7 +52,6 @@ let mb = menubar({
 
 // 隐藏 Dock 栏
 app.dock.hide()
-storage.clear()
 
 // 开机自动登录
 var launch = new AutoLaunch({

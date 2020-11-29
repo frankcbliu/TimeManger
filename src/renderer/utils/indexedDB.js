@@ -19,6 +19,9 @@ export default {
       console.log("Your browser doesn't support a stable version of IndexedDB. Such and such feature will not be available.")
     }
 
+    if (this.db) {
+      return
+    }
     // 用于自测阶段清空数据库
     // if (process.env.NODE_ENV === 'development') {
     //   var req = window.indexedDB.deleteDatabase('timeManager')
@@ -38,6 +41,7 @@ export default {
         console.log('创建数据库表....')
         let db = request.result
         let objectStore
+        // 创建数据库表
         if (!db.objectStoreNames.contains('task')) {
           console.log('创建主任务表: task')
           // 创建标识号的主键索引
@@ -71,10 +75,16 @@ export default {
         }
       }
     })
-
-    // 创建数据库表
   },
 
+  clear () {
+    if (process.env.NODE_ENV === 'development') {
+      var req = window.indexedDB.deleteDatabase('timeManager')
+      req.onsuccess = function () {
+        console.log('成功删除数据库')
+      }
+    }
+  },
   // 往指定数据表中添加数据
   db_add (tableName, item) {
     let objectStore = this.db.transaction([tableName], 'readwrite').objectStore(tableName)
@@ -95,8 +105,10 @@ export default {
    **********************************************************************/
 
   // 创建主任务
-  createTask (data) {
-    return this.db_add('task', data)
+  async createTask (data, vuex) {
+    let id = await this.db_add('task', data)
+    vuex.dispatch('pushTodoTasksSort', id)
+    return id
   },
 
   // 创建子任务

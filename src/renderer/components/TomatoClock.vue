@@ -23,7 +23,7 @@
       <audio :src="clock_bg_sound" ref="audio" loop></audio>
     </div>
 
-    <div class="bottom" :hidden="clockStart">
+    <div class="bottom" :hidden="clockStatus === 'timing'">
       <el-input
         placeholder="请输入任务"
         v-model="taskName"
@@ -43,7 +43,7 @@
         </el-select>
       </el-input>
     </div>
-    <div class="bottom" :hidden="!clockStart">
+    <div class="bottom" :hidden="clockStatus !== 'timing'">
       <div class="interruptList">
         <el-button type="info" plain>上厕所</el-button>
         <el-button type="info" plain>打水</el-button>
@@ -63,33 +63,39 @@ export default {
   name: 'tomato-clock',
   data () {
     return {
+      // config
       workTime: 25, // 工作钟时长
       restTime: 5, // 休息钟时长
-      clockStart: false, // 开启计时
-      taskName: '', // 任务名
-      tag: 'default',
       input_icon: 'el-icon-edit',
       clock_icon: 'el-icon-video-play',
       clock_time: '25:00',
-      clockHandleId: null,
       clock_bg_sound: null, // 默认是嘀嗒
+      // render
+      clockHandleId: null,
+      secDeg: 0, // 每秒所占圆的度数
+      curDeg: 0, // 当前度数
+      // user_input
+      taskName: '', // 任务名
+      tag: 'default',
+      clockStatus: '', // 开启计时
       restSec: undefined, // 剩余秒数
       clockData: {
+        'begin_work_time': null, // 开始计时时的工作时间
         'begin_time': null,
         'interrupt': []
-      },
-      secDeg: 0, // 每秒所占圆的度数
-      curDeg: 0 // 当前度数
+      }
+
     }
   },
   watch: {
     '$store.state.Reload.reloadSound' (sound) { // 监听音频配置
       this.clock_bg_sound = require('../assets/' + (sound || 'dida.mp3'))
-      this.clockStart = false
+      this.clockStatus = 'pending'
     },
     '$store.state.Reload.workTime' (workTime) { // 监听工作时间
       this.workTime = workTime
-      if (!this.clockStart) {
+      console.log('监听到工作时间变化', this.workTime)
+      if (this.clockStatus === 'init') { // 此时为非计时状态
         this.restSec = workTime * 60
         this.secDeg = 360 / this.restSec // 计算每秒所占度数
         this.clock_time = datetime.formatClockTime(this.restSec)
@@ -98,19 +104,30 @@ export default {
     '$store.state.Reload.restTime' (restTime) { // 监听休息时间
       this.restTime = restTime
     },
-
-    clockStart () { // 监听时钟开启与否
-      this.clock_icon = this.clockStart ? 'el-icon-video-pause' : 'el-icon-video-play'
-      if (this.clockStart) {
-        this.start()
-      } else {
+    clockStatus (status) { // 监听时钟状态
+      if (status === 'init') { // 时钟处于初始化状态
+        this.clock_icon = 'el-icon-video-play'
+        this.restSec = this.workTime * 60
+        this.secDeg = 360 / this.restSec // 计算每秒所占度数
+        this.curDeg = 0
+        this.clock_time = datetime.formatClockTime(this.restSec)
         clearInterval(this.clockHandleId)
-        let audio = this.$refs['audio']
-        audio.pause()
-        audio.currentTime = 0
+        this.closeAudio()
+      } else if (status === 'timing') { // 时钟处于计时状态
+        this.clock_icon = 'el-icon-video-pause'
+        this.start()
+      } else if (status === 'pending') { // 时钟处于暂停状态
+        this.clock_icon = 'el-icon-video-play'
+        clearInterval(this.clockHandleId)
+        this.closeAudio()
+      } else { // 时钟处于完成状态
+        // 提醒
+        this.showNotification()
+        // 重置为 init 状态
+        this.clockStatus = 'init'
       }
     },
-    curDeg (newDeg) {
+    curDeg (newDeg) { // 监听当前角度变化
       let pie1 = this.$refs['pie1']
       let pie2 = this.$refs['pie2']
       if (newDeg <= 180) {
@@ -124,13 +141,11 @@ export default {
   /**
    * 初始化
    */
-  mounted () {
+  async mounted () {
     this.workTime = storage.getItem('work-time') || 25
     this.restTime = storage.getItem('rest-time') || 5
-    this.restSec = this.workTime * 60
-    this.secDeg = 360 / this.restSec // 计算每秒所占度数
-    this.clock_time = datetime.formatClockTime(this.restSec)
     this.clock_bg_sound = require('../assets/' + (storage.getItem('clock-bg-sound') || 'dida.mp3'))
+    this.clockStatus = 'init' // 执行初始化
   },
 
   methods: {
@@ -138,14 +153,19 @@ export default {
       this.input_icon = this.taskName ? 'el-icon-check' : 'el-icon-edit'
     },
 
-    changeClock () { // 开始/暂停计时
-      this.clockStart = !this.clockStart
+    changeClock () { // 计时状态机流转
+      if (this.clockStatus === 'init') {
+        this.clockStatus = 'timing'
+        this.clockData.begin_time = datetime.getNowDateTime()// 记录开始时间
+        this.clockData.begin_work_time = this.workTime // 记录开始时的工作时间
+      } else if (this.clockStatus === 'timing') {
+        this.clockStatus = 'pending'
+      } else if (this.clockStatus === 'pending') {
+        this.clockStatus = 'timing'
+      }
     },
 
     start () { // 开始计时
-      if (this.restSec === this.workTime * 60) { // 记录开始时间
-        this.clockData.begin_time = datetime.getNowDateTime()
-      }
       this.updateTime(this.restSec)
       setTimeout(() => {
         this.$refs['audio'].play()
@@ -159,25 +179,39 @@ export default {
         this.clock_time = datetime.formatClockTime(sec)
         this.restSec = sec
         if (sec === 0) { // 到时间结束
-          this.clockStart = false
-          // 重置
-          this.restSec = this.workTime * 60
-          this.curDeg = 0
-          this.clock_time = datetime.formatClockTime(this.restSec)
-          // 提醒
-          this.showNotification()
+          this.clockStatus = 'completed'
         }
       }, 1000)
     },
-    completeClock (isMain) { // 创建番茄钟数据
+    closeAudio () { // 关闭声音
+      let audio = this.$refs['audio']
+      audio.pause()
+      audio.currentTime = 0
+    },
+    completeMainTaskClock (isMain) { // 创建属于主任务的番茄钟数据
       let that = this
-      db.createClock({
-        'is_main': isMain,
-        'begin_time': that.clockData.begin_time,
-        'interrupt': that.clockData.interrupt
+      // 先创建主任务
+      db.createTask({
+        'name': that.taskName,
+        'is_done': 0,
+        'count': 1,
+        'sum_time': that.clockData.begin_work_time,
+        'done_date': 0
+      }, this.$store).then((id) => {
+        db.createClock({
+          'name': that.taskName,
+          'task_id': id,
+          'is_main': true,
+          'begin_time': that.clockData.begin_time,
+          'interrupt': that.clockData.interrupt
+        }).then((res) => {
+          // 清空任务名
+          that.taskName = ''
+          console.log(res)
+        })
       })
     },
-    showNotification () {
+    showNotification () { // 展示通知栏
       let that = this
       notifier.notify(
         {
@@ -199,11 +233,12 @@ export default {
           } else { // contentsClicked / actionClicked
             // 点击完成
             console.log('这是点击了完成', metadata)
-            that.completeClock()
+            that.completeMainTaskClock()
           }
         }
       )
     }
+
   }
 
 }
@@ -250,7 +285,7 @@ export default {
 .pie_mod .pie {
   width: 120px;
   height: 120px;
-  background-color:#f5cbb5;
+  background-color: #f5cbb5;
   border-radius: 50%;
   position: absolute;
 }

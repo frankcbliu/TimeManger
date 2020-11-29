@@ -1,9 +1,10 @@
 <template>
   <div style="width: 100%; height: 100%">
     <div class="main">
-      <div class="clock" @click="changeClock">
+      <div class="clock" >
         <!-- 右半边半圆背景  -->
         <div class="pie_mod pie_right">
+          <div class="close" v-show="clockStatus !== 'init'" @click="abandon"><i class="el-icon-circle-close"></i></div>
           <!-- 右边半圆 -->
           <div class="pie" ref="pie1"></div>
         </div>
@@ -15,8 +16,8 @@
         <!-- 倒计时背景 -->
         <div class="clock_bg"></div>
         <!-- 倒计时-时间文案 -->
-        <div class="clock_time">{{ clock_time }}</div>
-        <div class="clock_button">
+        <div class="clock_time" @click="changeClock">{{ clock_time }}</div>
+        <div class="clock_button" @click="changeClock">
           <i :class="clock_icon"></i>
         </div>
       </div>
@@ -155,6 +156,9 @@ export default {
   },
 
   methods: {
+    abandon () {
+      this.clockStatus = 'init'
+    },
     completeInput () { // 输入框失去焦点或者回车，修改输入框状态
       this.input_icon = this.taskName ? 'el-icon-check' : 'el-icon-edit'
     },
@@ -283,7 +287,7 @@ export default {
  */
 .clock {
   /* margin-left: 20%; */
-  padding-top: 3%;
+  padding-top: 5%;
   zoom: 200%;
   position: relative;
   display: flex;
@@ -305,6 +309,12 @@ export default {
 .pie_right,
 .pie_right .pie {
   clip: rect(0, 120px, 120px, 60px);
+}
+.close {
+  position: absolute;
+  right: 0;
+  color: #e2a48f;
+  cursor: pointer;
 }
 
 .pie_left,
@@ -343,6 +353,7 @@ export default {
   text-align: center;
   border-radius: 20px;
   z-index: 2;
+  cursor: pointer;
 }
 .clock_button > i {
   background-color: #e2a48f;

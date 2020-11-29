@@ -118,8 +118,9 @@ export default {
 
   // 创建番茄钟
   createClock (data) {
-    // 开始时间
-    data['begin_time'] = datetime.getNowDateTime()
+    // 结束时间
+    data['end_time'] = datetime.getNowDateTime()
+    data['done_date'] = datetime.getNowDate()
     return this.db_add('clock', data)
   },
 
@@ -226,8 +227,8 @@ export default {
    */
   getTaskByShowDoneDay (day) {
     let objectStore = this.db.transaction(['task']).objectStore('task')
-    let endDate = datetime.getTimeStamp()
-    let beginDate = datetime.getTimeStamp(day)
+    let endDate = datetime.getDateTimeStamp()
+    let beginDate = datetime.getDateTimeStamp(day)
     let range = IDBKeyRange.bound(beginDate, endDate)
     let request = objectStore.index('done_date').openCursor(range)
     let res = []
@@ -331,6 +332,66 @@ export default {
     })
   },
 
+  /**
+   * 给主任务增加番茄钟数量和时间
+   * @param {Number} id
+   * @param {Number} cost 单位：分钟
+   */
+  bindClockTask (id, cost) {
+    let objectStore = this.db.transaction(['task'], 'readwrite').objectStore('task')
+    let request = objectStore.get(id)
+    return new Promise((resolve, reject) => {
+      request.onerror = function (event) {
+        reject(new Error('根据id获取数据失败'))
+      }
+      request.onsuccess = function (event) {
+        var data = event.target.result
+        data.count++
+        data.sum_time += cost
+        // 把更新过的对象放回数据库
+        var requestUpdate = objectStore.put(data)
+        requestUpdate.onerror = function (event) {
+          reject(new Error('更新数据失败'))
+        }
+        requestUpdate.onsuccess = function (event) {
+          resolve(data)
+        }
+      }
+    })
+  },
+
+  /**
+   * 给子任务增加番茄钟数量, 给对应的主任务增加番茄钟数量和时间
+   * @param {Number} subId
+   * @param {Number} cost 单位：分钟
+   */
+  bindClockSubTask (subId, cost) {
+    let that = this
+    let objectStore = this.db.transaction(['sub_task'], 'readwrite').objectStore('sub_task')
+    let request = objectStore.get(subId)
+    return new Promise((resolve, reject) => {
+      request.onerror = function (event) {
+        reject(new Error('根据id获取数据失败'))
+      }
+      request.onsuccess = function (event) {
+        var data = event.target.result
+        data.count++ // 增加子任务番茄钟数量
+        that.bindClockTask({ // 绑定主任务
+          id: data.id,
+          cost: cost
+        }).then((res) => {
+          // 把更新过的对象放回数据库
+          var requestUpdate = objectStore.put(data)
+          requestUpdate.onerror = function (event) {
+            reject(new Error('更新数据失败'))
+          }
+          requestUpdate.onsuccess = function (event) {
+            resolve(data)
+          }
+        })
+      }
+    })
+  },
   /**
    * 完成番茄钟
    * @param {Number} clockId

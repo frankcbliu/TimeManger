@@ -174,6 +174,11 @@ ipcMain.on('complete', () => {
   openCompleteWindow()
 })
 
+// 放弃番茄钟，关闭
+ipcMain.on('complete-close', () => {
+  completeWin = null
+})
+
 // // 刷新时钟界面
 // ipcMain.on('reload-clock', () => {
 //   mb.window.reload()

@@ -409,7 +409,7 @@ export default {
     async handleCheckedTask (id, isDone, subTasks) {
       await db.setTaskParam(id, {
         is_done: isDone,
-        done_date: isDone ? datetime.getTimeStamp() : 0
+        done_date: isDone ? datetime.getDateTimeStamp() : 0
       })
       if (isDone) {
         // 如果已完成，子任务默认为全部完成

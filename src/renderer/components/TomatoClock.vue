@@ -1,10 +1,12 @@
 <template>
   <div style="width: 100%; height: 100%">
     <div class="main">
-      <div class="clock" >
+      <div class="clock">
         <!-- 右半边半圆背景  -->
         <div class="pie_mod pie_right">
-          <div class="close" v-show="clockStatus !== 'init'" @click="abandon"><i class="el-icon-circle-close"></i></div>
+          <div class="close" v-show="clockStatus !== 'init'" @click="abandon">
+            <i class="el-icon-circle-close"></i>
+          </div>
           <!-- 右边半圆 -->
           <div class="pie" ref="pie1"></div>
         </div>
@@ -24,7 +26,7 @@
       <audio :src="clock_bg_sound" ref="audio" loop></audio>
     </div>
 
-    <div class="bottom" :hidden="clockStatus === 'timing'">
+    <div class="bottom" :hidden="clockStatus === 'timing' || clockStatus === 'interrupt'">
       <el-input
         placeholder="请输入任务"
         v-model="taskName"
@@ -44,11 +46,17 @@
         </el-select>
       </el-input>
     </div>
-    <div class="bottom" :hidden="clockStatus !== 'timing'">
+    <div class="bottom" :hidden="clockStatus !== 'timing' && clockStatus !== 'interrupt'">
       <div class="interruptList">
-        <el-button type="info" plain>上厕所</el-button>
-        <el-button type="info" plain>打水</el-button>
-        <el-button type="info" plain>看微信消息</el-button>
+        <el-button type="info" plain @click="clickInterrupt('上厕所')"
+          >上厕所</el-button
+        >
+        <el-button type="info" plain @click="clickInterrupt('打水')"
+          >打水</el-button
+        >
+        <el-button type="info" plain @click="clickInterrupt('其他')"
+          >其他</el-button
+        >
       </div>
     </div>
   </div>
@@ -84,9 +92,10 @@ export default {
       clockData: {
         'begin_work_time': null, // 开始计时时的工作时间
         'begin_time': null,
-        'interrupt': []
+        'interrupt': [],
+        'interruptName': '', // 当前中断名字
+        'interruptStart': null
       }
-
     }
   },
   watch: {
@@ -122,6 +131,7 @@ export default {
         clearInterval(this.clockHandleId)
         this.closeAudio()
       } else if (status === 'completed') { // 时钟处于完成状态
+        storage.setItem('complete_clock_data', [this.taskName, this.clockData])
         // 提醒
         this.showNotification()
         // 重置
@@ -129,7 +139,11 @@ export default {
         this.restSec = this.workTime * 60
         this.secDeg = 360 / this.restSec // 计算每秒所占度数
         this.curDeg = 0
-        this.clock_time = '完成任务'
+        this.clock_time = '完成'
+        clearInterval(this.clockHandleId)
+        this.closeAudio()
+      } else if (status === 'interrupt') { // 时钟处于中断状态
+        this.clock_icon = 'el-icon-video-play'
         clearInterval(this.clockHandleId)
         this.closeAudio()
       }
@@ -172,13 +186,23 @@ export default {
       } else if (this.clockStatus === 'pending') {
         this.clockStatus = 'timing'
       } else if (this.clockStatus === 'completed') {
+        storage.setItem('complete_clock_data', [this.taskName, this.clockData])
         ipcRenderer.send('complete')
+      } else if (this.clockStatus === 'interrupt') {
+        this.clockStatus = 'timing'
+        // 添加中断事件
+        this.clockData.interrupt.push({
+          'name': this.clockData.interruptName,
+          'cost': Math.round(datetime.getTimeStamp() - this.clockData.interruptStart)
+        })
+        console.log(this.clockData.interrupt)
       }
     },
 
     start () { // 开始计时
       this.updateTime(this.restSec)
       setTimeout(() => {
+        if (this.clockStatus !== 'timing') { return }
         this.$refs['audio'].play()
       }, 1000)
     },
@@ -221,6 +245,7 @@ export default {
         })
       })
     },
+
     showNotification () { // 展示通知栏
       let that = this
       notifier.notify(
@@ -252,6 +277,14 @@ export default {
           }
         }
       )
+    },
+
+    clickInterrupt (name) { // 点击中断按钮
+      if (this.clockStatus !== 'interrupt') { // 避免中断情况下点击了其他的中断事件
+        this.clockStatus = 'interrupt'
+        this.clockData.interruptStart = datetime.getTimeStamp()
+      }
+      this.clockData.interruptName = name
     }
 
   }

@@ -18,13 +18,7 @@ const mutations = {
     state.restTime = restTime
   },
   UPDATE_TODO_TASKS_SORT (state, todoTasksSort) {
-    console.log('更新')
-    // setTimeout(() => {
-    //   state.todoTasksSort = todoTasksSort
-    //   setTimeout(() => {
-    //     console.log('更新之后')
-    //   })
-    // }, 1000)
+    state.todoTasksSort = todoTasksSort
     storage.setItem('todo-tasks-sort', todoTasksSort)
   },
   PUSH_TODO_TASKS_SORT (state, id) {

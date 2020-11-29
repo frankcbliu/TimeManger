@@ -146,7 +146,7 @@ export default {
   //   storage.clear()
   // },
   created () {
-    let data = storage.getItem('complete_clock_data') || ['', null]
+    let data = storage.getItem('complete_clock_data') || ['', {'begin_work_time': 25, 'begin_time': '', 'interrupt': []}]
     this.taskName = data[0]
     this.clockData = data[1]
   },
@@ -283,8 +283,9 @@ export default {
       ipcRenderer.send('complete-close')
     },
     async createClock () { // 创建番茄钟记录
+      console.log(this.operate)
       await this.createOrBindClock()
-      ipcRenderer.send('complete-close')
+      // ipcRenderer.send('complete-close')
       this.$store.dispatch('resetClockStatus')
     },
     createOrBindClock () {
@@ -309,14 +310,14 @@ export default {
           })
         })
       } else if (clockType === 'new_sub_task') { // 创建子任务
-        db.createSubTask({
+        db.createSubTaskAndClock({
           'name': that.taskName,
           'id': id,
           'begin_time': that.clockData.begin_time,
           'interrupt': that.clockData.interrupt,
           'cost': that.clockData.begin_work_time
         }).then((res) => {
-          console.log(res)
+          console.log('创建子任务', res)
         })
       } else if (clockType === 'bind_task') { // 绑定主任务
         // 更改番茄钟数量、总用时

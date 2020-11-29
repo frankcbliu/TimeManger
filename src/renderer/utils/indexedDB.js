@@ -1,4 +1,5 @@
 import console from 'console'
+import { resolve } from 'path'
 import datetime from './datetime.js'
 /**
  * indexedDB.js，浏览器本地数据库操作
@@ -30,7 +31,7 @@ export default {
     //   }
     // }
 
-    let request = this.indexedDB.open('timeManager', 1)
+    let request = this.indexedDB.open('timeManager', 2)
     let that = this
     return new Promise((resolve, reject) => {
       request.onsuccess = function (event) {
@@ -118,17 +119,20 @@ export default {
 
   // 更新主任务的番茄钟数量和时间，创建子任务和番茄钟
   createSubTaskAndClock (data) {
+    console.log('data: ', data)
     let that = this
     this.bindClockTask({
       'id': data.id,
       'cost': data.cost
     }).then((task) => { // 获取主任务名称
+      console.log('get task: ', task)
       that.createSubTask({
         'name': task.name,
         'id': task.id,
         'sub_name': data.name,
         'sub_count': 1
       }).then((res) => {
+        console.log('get res: ', res)
         that.createClock({
           'name': res.sub_name,
           'task_id': res.sub_id,
@@ -136,7 +140,8 @@ export default {
           'begin_time': data.begin_time,
           'interrupt': data.interrupt
         }).then((res) => {
-
+          console.log(res)
+          resolve(res)
         })
       })
     })
@@ -372,8 +377,9 @@ export default {
       }
       request.onsuccess = function (event) {
         var data = event.target.result
-        data.count++
-        data.sum_time += cost
+        console.log('bindClockTask: ', data)
+        data.count = data.count + 1
+        data.sum_time = cost + data.sum_time
         // 把更新过的对象放回数据库
         var requestUpdate = objectStore.put(data)
         requestUpdate.onerror = function (event) {

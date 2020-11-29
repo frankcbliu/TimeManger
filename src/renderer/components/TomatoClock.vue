@@ -247,6 +247,7 @@ export default {
         }).then((res) => {
           // 清空任务名
           that.taskName = ''
+          that.input_icon = 'el-icon-edit'
         })
       })
     },
@@ -273,8 +274,9 @@ export default {
           } else { // contentsClicked / actionClicked
             console.log(metadata.activationType)
             // 点击完成
-            if (that.taskName !== '') { // 任务名非空，默认创建主任务
+            if (that.taskName !== '' && metadata.activationType === 'actionClicked') { // 任务名非空，默认创建主任务
               that.completeMainTaskClock()
+              return
             }
             // 超时
             if (metadata.activationType !== 'timeout') {

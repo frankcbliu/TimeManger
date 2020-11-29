@@ -116,6 +116,13 @@ export default {
     return this.db_add('sub_task', data)
   },
 
+  // 创建子任务和番茄钟
+  createSubTaskAndClock (data) {
+    this.getTaskByParam('id', data.id).then((task) => {
+
+    })
+  },
+
   // 创建番茄钟
   createClock (data) {
     // 结束时间

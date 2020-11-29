@@ -162,6 +162,7 @@ checkAutoLaunch()
 
 mb.on('ready', function ready () {
   console.log('app is ready')
+  openCompleteWindow()
 })
 
 // 开启配置选项

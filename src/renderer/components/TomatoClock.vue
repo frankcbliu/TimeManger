@@ -1,7 +1,7 @@
 <template>
   <div style="width: 100%; height: 100%">
     <div class="main">
-      <div class="clock">
+      <div class="clock" @click="changeClock">
         <!-- 右半边半圆背景  -->
         <div class="pie_mod pie_right">
           <!-- 右边半圆 -->
@@ -17,7 +17,7 @@
         <!-- 倒计时-时间文案 -->
         <div class="clock_time">{{ clock_time }}</div>
         <div class="clock_button">
-          <i :class="clock_icon" @click="changeClock"></i>
+          <i :class="clock_icon"></i>
         </div>
       </div>
       <audio :src="clock_bg_sound" ref="audio" loop></audio>
@@ -58,6 +58,7 @@ import storage from '../utils/storage.js'
 import datetime from '../utils/datetime.js'
 import db from '../utils/indexedDB.js'
 const notifier = require('node-notifier')
+const { ipcRenderer } = require('electron')
 
 export default {
   name: 'tomato-clock',
@@ -89,13 +90,11 @@ export default {
   },
   watch: {
     '$store.state.Reload.reloadSound' (sound) { // 监听音频配置
-      console.log('监听到音频变化')
       this.clockStatus = 'pending'
       this.clock_bg_sound = require('../assets/' + (sound || 'dida.mp3'))
     },
     '$store.state.Reload.workTime' (workTime) { // 监听工作时间
       this.workTime = workTime
-      console.log('监听到工作时间变化', this.workTime)
       if (this.clockStatus === 'init') { // 此时为非计时状态
         this.restSec = workTime * 60
         this.secDeg = 360 / this.restSec // 计算每秒所占度数
@@ -121,11 +120,17 @@ export default {
         this.clock_icon = 'el-icon-video-play'
         clearInterval(this.clockHandleId)
         this.closeAudio()
-      } else { // 时钟处于完成状态
+      } else if (status === 'completed') { // 时钟处于完成状态
         // 提醒
         this.showNotification()
-        // 重置为 init 状态
-        this.clockStatus = 'init'
+        // 重置
+        this.clock_icon = 'el-icon-check'
+        this.restSec = this.workTime * 60
+        this.secDeg = 360 / this.restSec // 计算每秒所占度数
+        this.curDeg = 0
+        this.clock_time = '完成任务'
+        clearInterval(this.clockHandleId)
+        this.closeAudio()
       }
     },
     curDeg (newDeg) { // 监听当前角度变化
@@ -153,7 +158,6 @@ export default {
     completeInput () { // 输入框失去焦点或者回车，修改输入框状态
       this.input_icon = this.taskName ? 'el-icon-check' : 'el-icon-edit'
     },
-
     changeClock () { // 计时状态机流转
       if (this.clockStatus === 'init') {
         this.clockStatus = 'timing'
@@ -163,6 +167,8 @@ export default {
         this.clockStatus = 'pending'
       } else if (this.clockStatus === 'pending') {
         this.clockStatus = 'timing'
+      } else if (this.clockStatus === 'completed') {
+        ipcRenderer.send('complete')
       }
     },
 
@@ -208,7 +214,6 @@ export default {
         }).then((res) => {
           // 清空任务名
           that.taskName = ''
-          console.log(res)
         })
       })
     },
@@ -230,11 +235,16 @@ export default {
           if (err) throw err
           // 点击详细设置
           if (metadata.activationType === 'closed') {
-            console.log('这是点击了详细设置')
+            ipcRenderer.send('complete')
           } else { // contentsClicked / actionClicked
             // 点击完成
-            console.log('这是点击了完成', metadata)
-            that.completeMainTaskClock()
+            if (that.taskName !== '') { // 任务名非空，默认创建主任务
+              that.completeMainTaskClock()
+            }
+            // 超时
+            if (metadata.activationType !== 'timeout') {
+              ipcRenderer.send('complete')
+            }
           }
         }
       )

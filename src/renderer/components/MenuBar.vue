@@ -165,7 +165,7 @@
                             item.id,
                             item.is_done,
                             subItem.sub_id,
-                            +isDone,
+                            +isDone
                           );
                         }
                       "
@@ -256,10 +256,10 @@ export default {
       this.init()
     }
   },
-  created () { // 删除缓存，测试用
-    db.clear()
-    storage.clear()
-  },
+  // created () { // 删除缓存，测试用
+  //   db.clear()
+  //   storage.clear()
+  // },
   async mounted () {
     await db.initDB()
     this.init()
@@ -306,9 +306,9 @@ export default {
       this.checkTasks = checkTasks
       this.checkSubTasks = checkSubTasks
 
-      console.log(this.todoTasksSort)
+      // console.log(this.todoTasksSort)
       // console.log(this.todoSubTaskSort)
-      console.log(this.todoTasks)
+      // console.log(this.todoTasks)
       // console.log(this.doneTasks)
     },
     /**
@@ -509,6 +509,14 @@ export default {
       )
       menu.append(
         new MenuItem({
+          label: '打开完成界面',
+          click: function () {
+            ipcRenderer.send('complete')
+          }
+        })
+      )
+      menu.append(
+        new MenuItem({
           label: '退出',
           click: function () {
             ipcRenderer.send('exit')
@@ -611,14 +619,13 @@ export default {
   color: #606266;
 }
 
-
 .showDoneTasks {
   padding: 10px 20px;
   cursor: pointer;
   background-color: #dbdadb;
 }
 .subTasks {
-  padding: 5px 0 5px 20px ;
+  padding: 5px 0 5px 20px;
 }
 .subTask {
   padding: 2.5px 0 2.5px 5px;

@@ -1,7 +1,7 @@
 import storage from '../../utils/storage.js'
 
 const state = {
-  reloadSound: 'dida.mp3', // (storage.getItem('clock-bg-sound') || 'dida.mp3')
+  reloadSound: (storage.getItem('clock-bg-sound') || 'dida.mp3'),
   workTime: storage.getItem('work-time') || 25,
   restTime: storage.getItem('rest-time') || 5,
   todoTasksSort: storage.getItem('todo-tasks-sort') || []

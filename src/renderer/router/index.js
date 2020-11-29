@@ -16,6 +16,11 @@ export default new Router({
       component: require('@/components/Setting.vue').default
     },
     {
+      path: '/complete',
+      name: 'complete',
+      component: require('@/components/Complete.vue').default
+    },
+    {
       path: '*',
       redirect: '/'
     }

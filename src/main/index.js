@@ -106,10 +106,10 @@ function checkAutoLaunch () {
   }
 }
 
-var win
+var settingWin, completeWin
 // 设置窗口
 function openSettingWindow () {
-  win = new BrowserWindow({
+  settingWin = new BrowserWindow({
     title: 'Prefrence',
     height: 400,
     width: 600,
@@ -123,16 +123,40 @@ function openSettingWindow () {
     }
   })
 
-  win.loadURL(winURL + '#/setting').then(() => {
+  settingWin.loadURL(winURL + '#/setting').then(() => {
     // win.setTitle('Prefrence')
     // win.webContents.openDevTools({ mode: 'detach' })
   })
-  win.on('closed', () => {
-    win = null
+  settingWin.on('closed', () => {
+    settingWin = null
     // 监测到窗口关闭时，再次检测
     checkAutoLaunch()
   })
 }
+
+// 完成窗口
+function openCompleteWindow () {
+  completeWin = new BrowserWindow({
+    title: 'TimeManager',
+    height: 320,
+    width: 260,
+    x: 520,
+    y: 180,
+    useContentSize: true,
+    // resizable: false,
+    webPreferences: {
+      nodeIntegration: true,
+      enableRemoteModule: true
+    }
+  })
+
+  completeWin.loadURL(winURL + '#/complete').then(() => {
+  })
+  completeWin.on('closed', () => {
+    completeWin = null
+  })
+}
+
 // 启动程序时检测一遍
 checkAutoLaunch()
 
@@ -143,6 +167,11 @@ mb.on('ready', function ready () {
 // 开启配置选项
 ipcMain.on('setting', () => {
   openSettingWindow()
+})
+
+// 开启完成番茄钟后的调整界面
+ipcMain.on('complete', () => {
+  openCompleteWindow()
 })
 
 // // 刷新时钟界面

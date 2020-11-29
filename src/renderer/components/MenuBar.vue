@@ -252,7 +252,7 @@ export default {
   },
   watch: {
     '$store.state.Reload.todoTasksSort' (todoTasksSort) {
-      this.todoTasksSort = todoTasksSort
+      this.todoTasksSort = JSON.parse(JSON.stringify(todoTasksSort)) // 拷贝
       this.init()
     }
   },
@@ -306,9 +306,9 @@ export default {
       this.checkTasks = checkTasks
       this.checkSubTasks = checkSubTasks
 
-      // console.log(this.todoTasksSort)
+      console.log(this.todoTasksSort)
       // console.log(this.todoSubTaskSort)
-      // console.log(this.todoTasks)
+      console.log(this.todoTasks)
       // console.log(this.doneTasks)
     },
     /**
@@ -411,18 +411,17 @@ export default {
         is_done: isDone,
         done_date: isDone ? datetime.getTimeStamp() : 0
       })
-      let todoTasksSort = this.todoTasksSort
       if (isDone) {
         // 如果已完成，子任务默认为全部完成
         for (let subItem of subTasks) {
           await db.setSubTaskParam(subItem.sub_id, { is_done: 1 })
         }
-        todoTasksSort = this.removeArrValue(todoTasksSort, id) // 删除缓存里的id
+        this.todoTasksSort = this.removeArrValue(this.todoTasksSort, id) // 删除缓存里的id
       } else {
-        todoTasksSort.push(id) // 未完成则往缓存里添加id
+        this.todoTasksSort.push(id) // 未完成则往缓存里添加id
       }
-      console.log(todoTasksSort)
-      this.$store.dispatch('updateTodoTasksSort', todoTasksSort)
+      console.log(this.todoTasksSort)
+      this.$store.dispatch('updateTodoTasksSort', this.todoTasksSort)
       // this.init()
     },
     /**

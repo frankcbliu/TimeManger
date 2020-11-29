@@ -45,6 +45,14 @@
                 >{{ "" }}</el-checkbox
               >
               <span class="taskName">{{ item.name }}</span>
+              <div 
+                class="newSubTask"
+                :class="{
+                  check:
+                    operate.type === 'new_sub_task' && operate.value === item.id,
+                }"
+                @click.stop="changeOperate('new_sub_task', item.id)"
+              >新增子任务</div>
             </div>
 
             <div class="subTasks">
@@ -348,26 +356,23 @@ body {
   height: 10%;
   padding: 0 5px;
   display: flex;
-  align-items: center;
+  align-items: flex-end;
 }
-.check {
-  background-color: #f5cbb5;
-}
-.pointer {
-  cursor: pointer;
-}
+
 .newTask {
+  box-sizing: border-box;
   height: 10%;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0 5px;
-  border-top: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
+  border: 1px solid #f5cbb5;
+  margin: 2% 5px;
+  border-radius: 5px;
 }
 .taskList {
   border-bottom: 1px solid #ddd;
-  height: 70%;
+  height: 66%;
 }
 
 .taskListTitle {
@@ -388,6 +393,7 @@ body {
 }
 .todoTask {
   padding: 5px;
+  position: relative;
 }
 .subTask {
   margin-left: 20px;
@@ -396,11 +402,29 @@ body {
 .subTaskName {
   font-size: 15px;
 }
+.newSubTask {
+  font-size: 14px;
+  display: inline-block;
+  position: absolute;
+  right: 5px;
+  border: 1px solid #f5cbb5;
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 1px 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
 .bottom {
   height: 10%;
   display: flex;
   justify-content: space-around;
   align-items: center;
+}
+.check {
+  background-color: #f5cbb5;
+}
+.pointer {
+  cursor: pointer;
 }
 </style>
 

@@ -9,6 +9,18 @@ const state = {
   clockStatus: 0
 }
 
+function initLog () {
+  const electronLog = require('electron-log')
+  let log = electronLog.create('reload')
+  let mlog = log.functions.log
+  log.functions.log = function (...params) {
+    mlog('[reload]', ...params)
+  }
+  return log.functions
+}
+
+const monsole = process.env.NODE_ENV === 'production' ? initLog() : console
+
 const mutations = {
   CHANGE_SOUND (state, sound) {
     state.reloadSound = sound
@@ -20,20 +32,24 @@ const mutations = {
     state.restTime = restTime
   },
   UPDATE_TODO_TASKS_SORT (state, todoTasksSort) {
+    monsole.log('UPDATE_TODO_TASKS_SORT', JSON.stringify(todoTasksSort))
     state.todoTasksSort = todoTasksSort
     storage.setItem('todo-tasks-sort', todoTasksSort)
   },
   PUSH_TODO_TASKS_SORT (state, id) {
+    monsole.log('PUSH_TODO_TASKS_SORT', id)
     let temp = state.todoTasksSort
     temp.push(id)
     state.todoTasksSort = temp
     storage.setItem('todo-tasks-sort', temp)
   },
   UPDATE_TODO_SUB_TASKS_SORT (state, todoSubTasksSort) { // 更新子任务缓存
+    monsole.log('UPDATE_TODO_SUB_TASKS_SORT', JSON.stringify(todoSubTasksSort))
     state.todoSubTasksSort = todoSubTasksSort
     storage.setItem('todo-sub-tasks-sort', todoSubTasksSort)
   },
   PUSH_TODO_SUB_TASKS_SORT (state, [id, sid]) { // 添加新子任务缓存
+    monsole.log('PUSH_TODO_SUB_TASKS_SORT', JSON.stringify([id, sid]))
     let temp = JSON.parse(JSON.stringify(state.todoSubTasksSort))
     temp[id].push(sid)
     state.todoSubTasksSort = temp

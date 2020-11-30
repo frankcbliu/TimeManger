@@ -232,6 +232,18 @@ import storage from '../utils/storage.js'
 const { remote, ipcRenderer } = require('electron')
 const { Menu, MenuItem } = remote
 
+function initLog () {
+  const electronLog = require('electron-log')
+  let log = electronLog.create('menuBar')
+  let mlog = log.functions.log
+  log.functions.log = function (...params) {
+    mlog('[menuBar]', ...params)
+  }
+  return log.functions
+}
+
+const monsole = process.env.NODE_ENV === 'production' ? initLog() : console
+
 export default {
   name: 'menu-bar',
   components: {
@@ -255,13 +267,13 @@ export default {
   },
   watch: {
     '$store.state.Reload.todoTasksSort' (todoTasksSort) {
-      console.log('监听到主任务顺序改变')
       this.todoTasksSort = JSON.parse(JSON.stringify(todoTasksSort)) // 拷贝
+      monsole.log('监听到主任务顺序改变', JSON.stringify(this.todoTasksSort))
       this.init()
     },
     '$store.state.Reload.todoSubTasksSort' (todoSubTasksSort) {
       this.todoSubTasksSort = JSON.parse(JSON.stringify(todoSubTasksSort)) // 拷贝
-      console.log('监听到子任务顺序改变', JSON.stringify(this.todoSubTasksSort))
+      monsole.log('监听到子任务顺序改变', JSON.stringify(this.todoSubTasksSort))
       this.init()
     }
   },
@@ -287,15 +299,17 @@ export default {
      * 初始化函数
      */
     async init () {
-      console.log('重新初始化：', JSON.stringify(this.todoSubTasksSort))
       // 重置新增的任务和子任务
       this.newTask = ''
       this.newSubTask = []
 
       let todoTasks = await db.getTaskByParam('is_done', 0) // 获取所有未完成的任务
       let doneTasks = await db.getTaskByShowDoneDay(this.showDoneDay) // 获取showDoneDay天内的已完成任务
+      monsole.log('[init] todoTasks: ', JSON.stringify(todoTasks))
+      monsole.log('[init] doneTasks: ', JSON.stringify(doneTasks))
 
       let checkTasks = []
+
       let checkSubTasks = []
       // 获取子任务并更新选中列表
       for (let item of [...todoTasks, ...doneTasks]) {
@@ -315,13 +329,6 @@ export default {
       this.todoTasks = this.taskSort(todoTasks) // 排序
       this.checkTasks = checkTasks
       this.checkSubTasks = checkSubTasks
-
-      console.log('结束初始化：', JSON.stringify(this.todoSubTasksSort))
-
-      // console.log(this.todoTasksSort)
-      // console.log(this.todoSubTasksSort)
-      // console.log(this.todoTasks)
-      // console.log(this.doneTasks)
     },
     /**
      * 初始化未完成的主任务列表顺序
@@ -350,7 +357,6 @@ export default {
      * 初始化未完成的主任务下的子任务顺序
      */
     subTaskSort (todoSubTasks, id) {
-      console.log('todoSubTasksSort: ', JSON.stringify(this.todoSubTasksSort))
       let tempSort = []
       if (
         this.todoSubTasksSort &&
@@ -374,7 +380,6 @@ export default {
         this.$store.dispatch('updateTodoSubTasksSort', this.todoSubTasksSort)
         // storage.setItem('todo-sub-tasks-sort', this.todoSubTasksSort) // 更新缓存
       }
-      console.log('生成的: ', JSON.stringify(todoSubTasks))
       return todoSubTasks
     },
     /**
@@ -388,13 +393,14 @@ export default {
      */
     async createTask (newTask) {
       if (this.newTask) {
-        await db.createTask({
+        let taskId = await db.createTask({
           'name': newTask,
           'is_done': 0,
           'sum_time': 0,
           'done_date': 0,
           'count': 0
-        }, this.$store)
+        })
+        this.$store.dispatch('pushTodoTasksSort', taskId)
       }
     },
     /**
@@ -540,7 +546,7 @@ export default {
         new MenuItem({
           label: '编辑',
           click: function () {
-            console.log('edit')
+            monsole.log('edit')
           }
         })
       )
@@ -572,7 +578,7 @@ export default {
         new MenuItem({
           label: '编辑',
           click: function () {
-            console.log('edit')
+            monsole.log('edit')
           }
         })
       )
@@ -581,8 +587,6 @@ export default {
     },
 
     openSetting () {
-      // 打开设置
-      console.log('open setting')
       // 右键菜单
       const menu = new Menu()
       menu.append(
@@ -598,6 +602,15 @@ export default {
           label: '打开完成界面',
           click: function () {
             ipcRenderer.send('complete')
+          }
+        })
+      )
+      menu.append(
+        new MenuItem({
+          label: '清空缓存',
+          click: function () {
+            db.clear()
+            storage.clear()
           }
         })
       )

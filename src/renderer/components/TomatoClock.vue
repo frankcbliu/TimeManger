@@ -69,6 +69,18 @@ import db from '../utils/indexedDB.js'
 const notifier = require('node-notifier')
 const { ipcRenderer } = require('electron')
 
+function initLog () {
+  const electronLog = require('electron-log')
+  let log = electronLog.create('tomato')
+  let mlog = log.functions.log
+  log.functions.log = function (...params) {
+    mlog('[tomato]', ...params)
+  }
+  return log.functions
+}
+
+const monsole = process.env.NODE_ENV === 'production' ? initLog() : console
+
 export default {
   name: 'tomato-clock',
   data () {
@@ -200,7 +212,6 @@ export default {
           'name': this.clockData.interruptName,
           'cost': Math.round(datetime.getTimeStamp() - this.clockData.interruptStart)
         })
-        console.log(this.clockData.interrupt)
       }
     },
 
@@ -237,10 +248,11 @@ export default {
         'count': 1,
         'sum_time': that.clockData.begin_work_time,
         'done_date': 0
-      }, this.$store).then((id) => {
+      }).then((taskId) => {
+        that.$store.dispatch('pushTodoTasksSort', taskId)
         db.createClock({
           'name': that.taskName,
-          'task_id': id,
+          'task_id': taskId,
           'is_main': true,
           'begin_time': that.clockData.begin_time,
           'interrupt': that.clockData.interrupt,
@@ -273,7 +285,7 @@ export default {
           if (metadata.activationType === 'closed') {
             ipcRenderer.send('complete')
           } else { // contentsClicked / actionClicked
-            console.log(metadata.activationType)
+            monsole.warn('activationType: ', metadata.activationType)
             // 点击完成
             if (that.taskName !== '' && metadata.activationType === 'actionClicked') { // 任务名非空，默认创建主任务
               that.completeMainTaskClock()

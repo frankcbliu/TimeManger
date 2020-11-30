@@ -15,20 +15,24 @@ const iconURL = process.env.NODE_ENV === 'development'
   ? `static/icon/logo.png`
   : `${__dirname}/static/icon/logo.png`
 
-// 日志文件
-if (process.env.NODE_ENV === 'production') {
-  const log = require('electron-log')
-  // 重写 console 的方法，日志会在控制台输出，并且输出到本地文件。具体用法参考官方文档
-  Object.assign(console, log.functions)
-  // 获取本地日志文件路径
-  console.log('-----------------------启动日志-----------------------')
-  console.log('日志文件路径：', log.transports.file.getFile().path)
-  console.log('-----------------------------------------------------')
+// 初始化日志
+function initLog () {
+  const electronLog = require('electron-log')
+  let log = electronLog.create('main')
+  let mlog = log.functions
+  log.functions.log = function (...params) { mlog.log('[main]', ...params) }
+  log.functions.error = function (...params) { mlog.error('[main]', ...params) }
+  log.functions.log('-----------------------启动日志-----------------------')
+  log.functions.log('日志文件路径：', log.transports.file.getFile().path)
+  log.functions.log('-----------------------------------------------------')
+  return log.functions
 }
+
+const monsole = process.env.NODE_ENV === 'production' ? initLog() : console
 
 // 防止 electron 因为意外挂掉而不退出
 process.on('uncaughtException', error => {
-  console.error('Exception:', error)
+  monsole.error('Exception:', error)
   process.exit(1)
 })
 
@@ -65,27 +69,27 @@ function updateAutoLaunch (isAutoLaunch) {
     launch.enable()
     launch.isEnabled().then((isEnabled) => {
       if (isEnabled) {
-        console.log('修改成功，当前开机自启状态: ', app.getLoginItemSettings().openAtLogin)
+        monsole.log('修改成功，当前开机自启状态: ', app.getLoginItemSettings().openAtLogin)
         return
       }
-      console.error('重试再次开启....', app.getLoginItemSettings().openAtLogin)
+      monsole.error('重试再次开启....', app.getLoginItemSettings().openAtLogin)
       launch.enable()
-      console.log('修改成功，当前开机自启状态: ', app.getLoginItemSettings().openAtLogin)
+      monsole.log('修改成功，当前开机自启状态: ', app.getLoginItemSettings().openAtLogin)
     }).catch((err) => {
-      console.error(err)
+      monsole.error(err)
     })
   } else { // 取消开机自启
     launch.disable()
     launch.isEnabled().then((isEnabled) => {
       if (!isEnabled) {
-        console.log('修改成功，当前开机自启状态: ', app.getLoginItemSettings().openAtLogin)
+        monsole.log('修改成功，当前开机自启状态: ', app.getLoginItemSettings().openAtLogin)
         return
       }
-      console.error('重试再次关闭....', app.getLoginItemSettings().openAtLogin)
+      monsole.error('重试再次关闭....', app.getLoginItemSettings().openAtLogin)
       launch.disable()
-      console.log('修改成功，当前开机自启状态: ', app.getLoginItemSettings().openAtLogin)
+      monsole.log('修改成功，当前开机自启状态: ', app.getLoginItemSettings().openAtLogin)
     }).catch((err) => {
-      console.error(err)
+      monsole.error(err)
     })
   }
 }
@@ -100,7 +104,8 @@ function checkAutoLaunch () {
   }
 
   // 当前配置与开机配置不一致时，进行修改
-  console.log(storage.getAll(), '\n\n', '当前自启配置：', curLaunchConfig, ' 缓存配置：', fileLaunchConfig)
+  monsole.log('缓存配置：', JSON.stringify(storage.getAll()))
+  monsole.log('当前自启配置：', curLaunchConfig, ' 缓存配置：', fileLaunchConfig)
   if (curLaunchConfig !== fileLaunchConfig) {
     updateAutoLaunch(fileLaunchConfig)
   }
@@ -161,7 +166,7 @@ function openCompleteWindow () {
 checkAutoLaunch()
 
 mb.on('ready', function ready () {
-  console.log('app is ready')
+  monsole.log('app is ready')
   // openCompleteWindow()
 })
 

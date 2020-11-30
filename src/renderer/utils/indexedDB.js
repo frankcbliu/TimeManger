@@ -1,8 +1,21 @@
-import console from 'console'
 import datetime from './datetime.js'
 /**
  * indexedDB.js，浏览器本地数据库操作
  */
+
+function initLog () {
+  const electronLog = require('electron-log')
+  let log = electronLog.create('indexedDB')
+  let mlog = log.functions.log
+  log.functions.log = function (...params) {
+    mlog('[indexedDB]', ...params)
+  }
+  return log.functions
+}
+
+const monsole = process.env.NODE_ENV === 'production' ? initLog() : console
+// const monsole = initLog()
+
 export default {
   // indexedDB兼容
   indexedDB: window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB,
@@ -16,19 +29,12 @@ export default {
     window.IDBTransaction = window.IDBTransaction || window.webkitIDBTransaction || window.msIDBTransaction || { READ_WRITE: 'readwrite' } // This line should only be needed if it is needed to support the object's constants for older browsers
     window.IDBKeyRange = window.IDBKeyRange || window.webkitIDBKeyRange || window.msIDBKeyRange
     if (!this.indexedDB) {
-      console.log("Your browser doesn't support a stable version of IndexedDB. Such and such feature will not be available.")
+      monsole.log("Your browser doesn't support a stable version of IndexedDB. Such and such feature will not be available.")
     }
 
     if (this.db) {
       return
     }
-    // 用于自测阶段清空数据库
-    // if (process.env.NODE_ENV === 'development') {
-    //   var req = window.indexedDB.deleteDatabase('timeManager')
-    //   req.onsuccess = function () {
-    //     console.log('成功删除数据库')
-    //   }
-    // }
 
     let request = this.indexedDB.open('timeManager', 2)
     let that = this
@@ -38,12 +44,12 @@ export default {
         resolve(that.db)
       }
       request.onupgradeneeded = function (event) {
-        console.log('创建数据库表....')
+        monsole.log('----------------------创建数据库表----------------------')
         let db = request.result
         let objectStore
         // 创建数据库表
         if (!db.objectStoreNames.contains('task')) {
-          console.log('创建主任务表: task')
+          monsole.log('创建主任务表: task')
           // 创建标识号的主键索引
           objectStore = db.createObjectStore('task', { keyPath: 'id', autoIncrement: true })
           objectStore.createIndex('name', 'name', { unique: false }) // 主任务名
@@ -54,7 +60,7 @@ export default {
           // 其他字段：count(番茄钟数量)、remind_time(提醒时间)、sum_time(总用时)、desc(描述)
         }
         if (!db.objectStoreNames.contains('sub_task')) {
-          console.log('创建子任务表: sub_task')
+          monsole.log('创建子任务表: sub_task')
           objectStore = db.createObjectStore('sub_task', { keyPath: 'sub_id', autoIncrement: true })
           objectStore.createIndex('name', 'name', { unique: false }) // 主任务名
           objectStore.createIndex('id', 'id', { unique: false }) // 主任务ID
@@ -64,7 +70,7 @@ export default {
           // 其他字段：sub_count(子任务番茄钟数量)
         }
         if (!db.objectStoreNames.contains('clock')) {
-          console.log('创建番茄钟表: clock')
+          monsole.log('创建番茄钟表: clock')
           objectStore = db.createObjectStore('clock', { keyPath: 'clock_id', autoIncrement: true })
           objectStore.createIndex('name', 'name', { unique: false }) // 任务名
           objectStore.createIndex('task_id', 'task_id', { unique: false }) // 任务ID
@@ -73,17 +79,18 @@ export default {
           objectStore.createIndex('tag', 'tag', { unique: false }) // 标签
           // 其他字段：begin_time(开始时间)、end_time(结束时间)
         }
+        monsole.log('------------------------结束建表------------------------')
       }
     })
   },
 
   clear () {
-    if (process.env.NODE_ENV === 'development') {
-      var req = window.indexedDB.deleteDatabase('timeManager')
-      req.onsuccess = function () {
-        console.log('成功删除数据库')
-      }
+    // if (process.env.NODE_ENV === 'development') {
+    var req = window.indexedDB.deleteDatabase('timeManager')
+    req.onsuccess = function () {
+      monsole.log('成功删除数据库')
     }
+    // }
   },
   // 往指定数据表中添加数据
   db_add (tableName, item) {
@@ -105,22 +112,22 @@ export default {
    **********************************************************************/
 
   // 创建主任务
-  async createTask (data, vuex) {
+  async createTask (data) {
     let id = await this.db_add('task', data)
-    vuex.dispatch('pushTodoTasksSort', id)
+    monsole.log('createTask: id: ', id, ' data: ', JSON.stringify(data))
     return id
   },
 
   // 创建子任务
-  async createSubTask (data, vuex) {
+  async createSubTask (data) {
     let subId = await this.db_add('sub_task', data)
-    console.log('db 创建子任务 ', [data.id, subId])
-    vuex.dispatch('pushTodoSubTasksSort', [data.id, subId])
+    monsole.log('createSubTask: subId: ', subId, ' data: ', JSON.stringify(data))
     return subId
   },
 
   // 创建番茄钟
   createClock (data) {
+    monsole.log('createClock: data: ', JSON.stringify(data))
     // 结束时间
     data['end_time'] = datetime.getNowDateTime()
     data['done_date'] = datetime.getNowDate()
@@ -135,6 +142,7 @@ export default {
    * @param {Number} subId
    */
   deleteSubTask (subId) {
+    monsole.log('deleteSubTask: subId: ', subId)
     let objectStore = this.db.transaction(['sub_task'], 'readwrite').objectStore('sub_task')
     let request = objectStore.delete(subId)
 
@@ -153,6 +161,7 @@ export default {
    * @param {Number} id
    */
   deleteTask (id) {
+    monsole.log('deleteTask: id: ', id)
     let objectStore = this.db.transaction(['task'], 'readwrite').objectStore('task')
     let request = objectStore.delete(id)
 
@@ -171,6 +180,7 @@ export default {
    * @param {Number}} clockId
    */
   deleteClock (clockId) {
+    monsole.log('deleteClock: clockId: ', clockId)
     let objectStore = this.db.transaction(['clock'], 'readwrite').objectStore('clock')
     let request = objectStore.delete(clockId)
 
@@ -341,7 +351,7 @@ export default {
    * @param {Number} cost 单位：分钟
    */
   bindClockTask (id, cost) {
-    console.log('bindClockTask: ', id, cost)
+    monsole.log('bindClockTask: ', id, cost)
     let objectStore = this.db.transaction(['task'], 'readwrite').objectStore('task')
     let request = objectStore.get(id)
     return new Promise((resolve, reject) => {
@@ -350,7 +360,7 @@ export default {
       }
       request.onsuccess = function (event) {
         var data = event.target.result
-        console.log('bindClockTask: ', data)
+        monsole.log('bindClockTask: ', JSON.stringify(data))
         data.count = data.count + 1
         data.sum_time = cost + data.sum_time
         // 把更新过的对象放回数据库
@@ -371,6 +381,7 @@ export default {
    * @param {Number} cost 单位：分钟
    */
   bindClockSubTask (subId, cost) {
+    monsole.log('bindClockSubTask: subId', subId, ' cost: ', cost)
     let that = this
     let objectStore = this.db.transaction(['sub_task'], 'readwrite').objectStore('sub_task')
     let request = objectStore.get(subId)
@@ -385,9 +396,7 @@ export default {
           data.id,
           cost
         ).then((res) => {
-          console.log(res)
         })
-        console.log(data)
         // 把更新过的对象放回数据库
         var requestUpdate = objectStore.put(data)
         requestUpdate.onerror = function (event) {
@@ -398,35 +407,8 @@ export default {
         }
       }
     })
-  },
-  /**
-   * 完成番茄钟
-   * @param {Number} clockId
-   */
-  setClockDone (clockId) {
-    let objectStore = this.db.transaction(['clock'], 'readwrite').objectStore('clock')
-    let request = objectStore.get(clockId)
-
-    return new Promise((resolve, reject) => {
-      request.onerror = function (event) {
-        reject(new Error('根据id获取数据失败'))
-      }
-      request.onsuccess = function (event) {
-        var data = event.target.result
-        // 更新你想修改的数据
-        data['end_time'] = datetime.getNowDateTime()
-        data['done_date'] = datetime.getNowDate()
-        // 把更新过的对象放回数据库
-        var requestUpdate = objectStore.put(data)
-        requestUpdate.onerror = function (event) {
-          reject(new Error('setClockDone 更新数据 error'))
-        }
-        requestUpdate.onsuccess = function (event) {
-          resolve('数据更新成功')
-        }
-      }
-    })
   }
+
   /**********************************************************************
    *                               END                                  *
    **********************************************************************/

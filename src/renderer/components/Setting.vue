@@ -42,6 +42,7 @@
       </div>
     </div>
     <div id="mid" v-show="activeName === 'two'">
+      <audio :src="clock_bg_sound" ref="audio" loop></audio>
       <div id="card" style="height: 18%">
         <div>
           <span style="width: 18%; font-size: 18px; line-height: 40px"
@@ -69,6 +70,18 @@
 <script >
 import storage from '../utils/storage.js'
 
+function initLog () {
+  const electronLog = require('electron-log')
+  let log = electronLog.create('setting')
+  let mlog = log.functions.log
+  log.functions.log = function (...params) {
+    mlog('[setting]', ...params)
+  }
+  return log.functions
+}
+
+const monsole = process.env.NODE_ENV === 'production' ? initLog() : console
+
 export default {
   name: 'setting',
   data () {
@@ -77,7 +90,6 @@ export default {
       autoLaunch: false, // 开机自启动
       workTime: 25, // 工作钟时长
       restTime: 5, // 休息钟时长
-      clockSound: '',
       options: [{
         value: 'dida.mp3',
         label: '嘀嗒'
@@ -88,7 +100,10 @@ export default {
       }, {
         value: 'rain.mp3',
         label: '雨声'
-      }]
+      }],
+      clock_bg_sound: null,
+      clockSound: '',
+      clockHandleId: null
     }
   },
   mounted () {
@@ -114,8 +129,19 @@ export default {
       this.$store.dispatch('changeRestTime', this.restTime)
     },
     updateSound () { // 更新背景音
+      monsole.log('change sound: ', this.clockSound)
       storage.setItem('clock-bg-sound', this.clockSound)
       this.$store.dispatch('changeSound', this.clockSound)
+      // 点击选项后自动播放两秒声音
+      this.clock_bg_sound = require('../assets/' + (this.clockSound || 'dida.mp3'))
+      this.clockHandleId = setImmediate(() => {
+        this.$refs['audio'].play()
+      })
+      setTimeout(() => {
+        let audio = this.$refs['audio']
+        audio.pause()
+        audio.currentTime = 0
+      }, 2000)
     }
   }
 }

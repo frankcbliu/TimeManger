@@ -113,6 +113,18 @@ import db from '../utils/indexedDB.js'
 import datetime from '../utils/datetime'
 const { ipcRenderer } = require('electron')
 
+function initLog () {
+  const electronLog = require('electron-log')
+  let log = electronLog.create('complete')
+  let mlog = log.functions.log
+  log.functions.log = function (...params) {
+    mlog('[complete]', ...params)
+  }
+  return log.functions
+}
+
+const monsole = process.env.NODE_ENV === 'production' ? initLog() : console
+
 export default {
   name: 'complete',
   data () {
@@ -162,7 +174,7 @@ export default {
      * 初始化函数
      */
     async init () {
-      console.log('init')
+      monsole.log('init')
       let todoTasks = await db.getTaskByParam('is_done', 0) // 获取所有未完成的任务
 
       let checkSubTasks = []
@@ -179,9 +191,6 @@ export default {
 
       this.todoTasks = this.taskSort(todoTasks) // 排序
       this.checkSubTasks = checkSubTasks
-
-      // console.log(this.todoTasks)
-      // console.log(this.todoTasksSort)
     },
     /**
      * 初始化未完成的主任务列表顺序
@@ -289,57 +298,45 @@ export default {
       ipcRenderer.send('complete-close')
       this.$store.dispatch('resetClockStatus')
     },
-    createOrBindClock () {
+    async createOrBindClock () {
       let { type: clockType, value: id } = this.operate
+      monsole.log('operate: ', JSON.stringify(this.operate))
       let that = this
       if (clockType === 'new_task') { // 创建主任务
-        console.log('创建主任务')
-
         // 先创建主任务
-        db.createTask({
+        let taskId = await db.createTask({
           'name': that.taskName,
           'is_done': 0,
           'count': 1,
           'sum_time': that.clockData.begin_work_time,
           'done_date': 0
-        }, this.$store).then((id) => {
-          db.createClock({
-            'name': that.taskName,
-            'task_id': id,
-            'is_main': true,
-            'begin_time': that.clockData.begin_time,
-            'interrupt': that.clockData.interrupt
-          }).then((res) => {
-          })
         })
-      } else if (clockType === 'new_sub_task') { // 创建子任务
-        console.log('创建子任务')
-        let data = {
+        this.$store.dispatch('pushTodoTasksSort', taskId)
+        let res = await db.createClock({
           'name': that.taskName,
-          'id': id,
+          'task_id': taskId,
+          'is_main': true,
           'begin_time': that.clockData.begin_time,
-          'interrupt': that.clockData.interrupt,
-          'cost': that.clockData.begin_work_time
-        }
-        db.bindClockTask(data.id, data.cost).then((task) => { // 获取主任务名称
-          console.log(task)
-          db.createSubTask({
-            'name': task.name,
-            'id': task.id,
-            'sub_name': data.name,
-            'sub_count': 1
-          }, this.$store).then((res) => {
-            console.log('get res: ', res)
-            db.createClock({
-              'name': res.sub_name,
-              'task_id': res.sub_id,
-              'is_main': false,
-              'begin_time': data.begin_time,
-              'interrupt': data.interrupt
-            }).then((res) => {
-              console.log(res)
-            })
-          })
+          'interrupt': that.clockData.interrupt
+        })
+        monsole.log('res: ', JSON.stringify(res))
+      } else if (clockType === 'new_sub_task') { // 创建子任务
+        monsole.log('创建子任务')
+        let task = await db.bindClockTask(id, that.clockData.begin_work_time) // 获取主任务名称
+        monsole.log('bindClockTask result: ', JSON.stringify(task))
+        let subId = await db.createSubTask({
+          'name': task.name,
+          'id': task.id,
+          'sub_name': that.taskName,
+          'sub_count': 1
+        })
+        this.$store.dispatch('pushTodoSubTasksSort', [task.id, subId])
+        db.createClock({
+          'name': that.taskName,
+          'task_id': subId,
+          'is_main': false,
+          'begin_time': that.clockData.begin_time,
+          'interrupt': that.clockData.interrupt
         })
       } else if (clockType === 'bind_task') { // 绑定主任务
         // 更改番茄钟数量、总用时

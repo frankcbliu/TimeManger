@@ -266,6 +266,9 @@ export default {
     }
   },
   watch: {
+    '$store.state.Reload.tomatoClockNumVersion' () { // 刷新番茄钟数量
+      this.init()
+    },
     '$store.state.Reload.todoTasksSort' (todoTasksSort) {
       this.todoTasksSort = JSON.parse(JSON.stringify(todoTasksSort)) // 拷贝
       monsole.log('监听到主任务顺序改变', JSON.stringify(this.todoTasksSort))

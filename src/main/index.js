@@ -19,9 +19,9 @@ const iconURL = process.env.NODE_ENV === 'development'
 function initLog () {
   const electronLog = require('electron-log')
   let log = electronLog.create('main')
-  let mlog = log.functions
-  log.functions.log = function (...params) { mlog.log('[main]', ...params) }
-  log.functions.error = function (...params) { mlog.error('[main]', ...params) }
+  let mlog = log.functions.log
+  log.functions.log = function (...params) { mlog('[main]', ...params) }
+
   log.functions.log('-----------------------启动日志-----------------------')
   log.functions.log('日志文件路径：', log.transports.file.getFile().path)
   log.functions.log('-----------------------------------------------------')
@@ -32,7 +32,7 @@ const monsole = process.env.NODE_ENV === 'production' ? initLog() : console
 
 // 防止 electron 因为意外挂掉而不退出
 process.on('uncaughtException', error => {
-  monsole.error('Exception:', error)
+  monsole.log('Exception:', error)
   process.exit(1)
 })
 
@@ -72,11 +72,11 @@ function updateAutoLaunch (isAutoLaunch) {
         monsole.log('修改成功，当前开机自启状态: ', app.getLoginItemSettings().openAtLogin)
         return
       }
-      monsole.error('重试再次开启....', app.getLoginItemSettings().openAtLogin)
+      monsole.log('重试再次开启....', app.getLoginItemSettings().openAtLogin)
       launch.enable()
       monsole.log('修改成功，当前开机自启状态: ', app.getLoginItemSettings().openAtLogin)
     }).catch((err) => {
-      monsole.error(err)
+      monsole.log(err)
     })
   } else { // 取消开机自启
     launch.disable()
@@ -85,11 +85,11 @@ function updateAutoLaunch (isAutoLaunch) {
         monsole.log('修改成功，当前开机自启状态: ', app.getLoginItemSettings().openAtLogin)
         return
       }
-      monsole.error('重试再次关闭....', app.getLoginItemSettings().openAtLogin)
+      monsole.log('重试再次关闭....', app.getLoginItemSettings().openAtLogin)
       launch.disable()
       monsole.log('修改成功，当前开机自启状态: ', app.getLoginItemSettings().openAtLogin)
     }).catch((err) => {
-      monsole.error(err)
+      monsole.log(err)
     })
   }
 }

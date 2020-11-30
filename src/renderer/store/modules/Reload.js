@@ -6,7 +6,8 @@ const state = {
   restTime: storage.getItem('rest-time') || 5,
   todoTasksSort: storage.getItem('todo-tasks-sort') || [],
   todoSubTasksSort: storage.getItem('todo-sub-tasks-sort') || [],
-  clockStatus: 0
+  clockStatus: 0,
+  tomatoClockNumVersion: 0 // 番茄钟数量版本，有变化则需要刷新
 }
 
 function initLog () {
@@ -57,6 +58,9 @@ const mutations = {
   },
   RESET_CLOCK_STATUS (state) {
     state.clockStatus++
+  },
+  RESET_TOMATO_CLOCK_NUM (state) {
+    state.tomatoClockNumVersion++
   }
 }
 
@@ -84,6 +88,9 @@ const actions = {
   },
   resetClockStatus ({ commit }) {
     commit('RESET_CLOCK_STATUS')
+  },
+  resetTomatoClockNum ({ commit }) {
+    commit('RESET_TOMATO_CLOCK_NUM')
   }
 }
 

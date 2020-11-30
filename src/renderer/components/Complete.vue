@@ -297,6 +297,7 @@ export default {
       await this.createOrBindClock()
       ipcRenderer.send('complete-close')
       this.$store.dispatch('resetClockStatus')
+      this.$store.dispatch('resetTomatoClockNum')
     },
     async createOrBindClock () {
       let { type: clockType, value: id } = this.operate

@@ -45,14 +45,17 @@
                 >{{ "" }}</el-checkbox
               >
               <span class="taskName">{{ item.name }}</span>
-              <div 
+              <div
                 class="newSubTask"
                 :class="{
                   check:
-                    operate.type === 'new_sub_task' && operate.value === item.id,
+                    operate.type === 'new_sub_task' &&
+                    operate.value === item.id,
                 }"
                 @click.stop="changeOperate('new_sub_task', item.id)"
-              >新增子任务</div>
+              >
+                新增子任务
+              </div>
             </div>
 
             <div class="subTasks">
@@ -132,7 +135,7 @@ export default {
       checkTasks: [], // 选中的主任务id
       checkSubTasks: [], // 选中的子任务id
       todoTasksSort: storage.getItem('todo-tasks-sort'), // 未完成的主任务排序 [id]
-      todoSubTaskSort: storage.getItem('todo-sub-tasks-sort') // 未完成的子任务排序 {id: [subId]}
+      todoSubTasksSort: storage.getItem('todo-sub-tasks-sort') // 未完成的子任务排序 {id: [subId]}
     }
   },
   // watch: {
@@ -146,7 +149,7 @@ export default {
   //   storage.clear()
   // },
   created () {
-    let data = storage.getItem('complete_clock_data') || ['', {'begin_work_time': 25, 'begin_time': '', 'interrupt': []}]
+    let data = storage.getItem('complete_clock_data') || ['', { 'begin_work_time': 25, 'begin_time': '', 'interrupt': [] }]
     this.taskName = data[0]
     this.clockData = data[1]
   },
@@ -209,23 +212,23 @@ export default {
      */
     subTaskSort (todoSubTasks, id) {
       let tempSort = []
-      if (this.todoSubTaskSort && this.todoSubTaskSort[id]) {
+      if (this.todoSubTasksSort && this.todoSubTasksSort[id]) {
         let tempObj = {}
         for (let item of todoSubTasks) {
           tempObj[item.sub_id] = item
         }
         todoSubTasks = []
-        for (let subId of this.todoSubTaskSort[id]) {
+        for (let subId of this.todoSubTasksSort[id]) {
           todoSubTasks.push(tempObj[subId])
         }
       } else {
-        this.todoSubTaskSort = this.todoSubTaskSort || {}
-        // 如果缓存里有不存在todoSubTaskSort[id]，则执行更新操作
+        this.todoSubTasksSort = this.todoSubTasksSort || {}
+        // 如果缓存里有不存在todoSubTasksSort[id]，则执行更新操作
         for (let item of todoSubTasks) {
           tempSort.push(item.sub_id)
         }
-        this.todoSubTaskSort[id] = tempSort
-        storage.setItem('todo-sub-tasks-sort', this.todoSubTaskSort) // 更新缓存
+        this.todoSubTasksSort[id] = tempSort
+        storage.setItem('todo-sub-tasks-sort', this.todoSubTasksSort) // 更新缓存
       }
       return todoSubTasks
     },
@@ -254,7 +257,6 @@ export default {
       } else {
         this.todoTasksSort.push(id) // 未完成则往缓存里添加id
       }
-      console.log(this.todoTasksSort)
       this.$store.dispatch('updateTodoTasksSort', this.todoTasksSort)
     },
     /**
@@ -283,15 +285,16 @@ export default {
       ipcRenderer.send('complete-close')
     },
     async createClock () { // 创建番茄钟记录
-      console.log(this.operate)
       await this.createOrBindClock()
-      // ipcRenderer.send('complete-close')
+      ipcRenderer.send('complete-close')
       this.$store.dispatch('resetClockStatus')
     },
     createOrBindClock () {
       let { type: clockType, value: id } = this.operate
       let that = this
       if (clockType === 'new_task') { // 创建主任务
+        console.log('创建主任务')
+
         // 先创建主任务
         db.createTask({
           'name': that.taskName,
@@ -310,21 +313,40 @@ export default {
           })
         })
       } else if (clockType === 'new_sub_task') { // 创建子任务
-        db.createSubTaskAndClock({
+        console.log('创建子任务')
+        let data = {
           'name': that.taskName,
           'id': id,
           'begin_time': that.clockData.begin_time,
           'interrupt': that.clockData.interrupt,
           'cost': that.clockData.begin_work_time
-        }).then((res) => {
-          console.log('创建子任务', res)
+        }
+        db.bindClockTask(data.id, data.cost).then((task) => { // 获取主任务名称
+          console.log(task)
+          db.createSubTask({
+            'name': task.name,
+            'id': task.id,
+            'sub_name': data.name,
+            'sub_count': 1
+          }, this.$store).then((res) => {
+            console.log('get res: ', res)
+            db.createClock({
+              'name': res.sub_name,
+              'task_id': res.sub_id,
+              'is_main': false,
+              'begin_time': data.begin_time,
+              'interrupt': data.interrupt
+            }).then((res) => {
+              console.log(res)
+            })
+          })
         })
       } else if (clockType === 'bind_task') { // 绑定主任务
         // 更改番茄钟数量、总用时
-        db.bindClockTask({
-          'id': id,
-          'cost': that.clockData.begin_work_time
-        }).then((res) => {
+        db.bindClockTask(
+          id,
+          that.clockData.begin_work_time
+        ).then((res) => {
           db.createClock({
             'name': res.name,
             'task_id': id,
@@ -335,10 +357,10 @@ export default {
           })
         })
       } else if (clockType === 'bind_sub_task') { // 绑定子任务
-        db.bindClockSubTask({
-          'id': id,
-          'cost': that.clockData.begin_work_time
-        }).then((res) => {
+        db.bindClockSubTask(
+          id,
+          that.clockData.begin_work_time
+        ).then((res) => {
           db.createClock({
             'name': res.sub_name,
             'task_id': id,
@@ -408,7 +430,8 @@ body {
   padding: 5px;
   position: relative;
 }
-.todoTask:hover, .subTask:hover {
+.todoTask:hover,
+.subTask:hover {
   background-color: #e5e3e6;
 }
 .subTask {

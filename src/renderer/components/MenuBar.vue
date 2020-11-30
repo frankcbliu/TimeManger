@@ -250,12 +250,18 @@ export default {
       newSubTask: [],
       isScroll: false, // 监听滚轮是否滚动
       todoTasksSort: storage.getItem('todo-tasks-sort'), // 未完成的主任务排序 [id]
-      todoSubTaskSort: storage.getItem('todo-sub-tasks-sort') // 未完成的子任务排序 {id: [subId]}
+      todoSubTasksSort: storage.getItem('todo-sub-tasks-sort') // 未完成的子任务排序 {id: [subId]}
     }
   },
   watch: {
     '$store.state.Reload.todoTasksSort' (todoTasksSort) {
+      console.log('监听到主任务顺序改变')
       this.todoTasksSort = JSON.parse(JSON.stringify(todoTasksSort)) // 拷贝
+      this.init()
+    },
+    '$store.state.Reload.todoSubTasksSort' (todoSubTasksSort) {
+      this.todoSubTasksSort = JSON.parse(JSON.stringify(todoSubTasksSort)) // 拷贝
+      console.log('监听到子任务顺序改变', JSON.stringify(this.todoSubTasksSort))
       this.init()
     }
   },
@@ -281,6 +287,7 @@ export default {
      * 初始化函数
      */
     async init () {
+      console.log('重新初始化：', JSON.stringify(this.todoSubTasksSort))
       // 重置新增的任务和子任务
       this.newTask = ''
       this.newSubTask = []
@@ -309,8 +316,10 @@ export default {
       this.checkTasks = checkTasks
       this.checkSubTasks = checkSubTasks
 
+      console.log('结束初始化：', JSON.stringify(this.todoSubTasksSort))
+
       // console.log(this.todoTasksSort)
-      // console.log(this.todoSubTaskSort)
+      // console.log(this.todoSubTasksSort)
       // console.log(this.todoTasks)
       // console.log(this.doneTasks)
     },
@@ -341,28 +350,31 @@ export default {
      * 初始化未完成的主任务下的子任务顺序
      */
     subTaskSort (todoSubTasks, id) {
+      console.log('todoSubTasksSort: ', JSON.stringify(this.todoSubTasksSort))
       let tempSort = []
       if (
-        this.todoSubTaskSort &&
-        this.todoSubTaskSort[id]
+        this.todoSubTasksSort &&
+        this.todoSubTasksSort[id]
       ) {
         let tempObj = {}
         for (let item of todoSubTasks) {
           tempObj[item.sub_id] = item
         }
         todoSubTasks = []
-        for (let subId of this.todoSubTaskSort[id]) {
+        for (let subId of this.todoSubTasksSort[id]) {
           todoSubTasks.push(tempObj[subId])
         }
       } else {
-        this.todoSubTaskSort = this.todoSubTaskSort || {}
-        // 如果缓存里有不存在todoSubTaskSort[id]，则执行更新操作
+        this.todoSubTasksSort = this.todoSubTasksSort || {}
+        // 如果缓存里有不存在todoSubTasksSort[id]，则执行更新操作
         for (let item of todoSubTasks) {
           tempSort.push(item.sub_id)
         }
-        this.todoSubTaskSort[id] = tempSort
-        storage.setItem('todo-sub-tasks-sort', this.todoSubTaskSort) // 更新缓存
+        this.todoSubTasksSort[id] = tempSort
+        this.$store.dispatch('updateTodoSubTasksSort', this.todoSubTasksSort)
+        // storage.setItem('todo-sub-tasks-sort', this.todoSubTasksSort) // 更新缓存
       }
+      console.log('生成的: ', JSON.stringify(todoSubTasks))
       return todoSubTasks
     },
     /**
@@ -377,10 +389,11 @@ export default {
     async createTask (newTask) {
       if (this.newTask) {
         await db.createTask({
-          name: newTask,
-          is_done: 0,
-          sum_time: 0,
-          done_date: 0
+          'name': newTask,
+          'is_done': 0,
+          'sum_time': 0,
+          'done_date': 0,
+          'count': 0
         }, this.$store)
       }
     },
@@ -401,9 +414,10 @@ export default {
           sub_name: newSubTask,
           is_done: 0,
           sum_time: 0
-        })
-        this.todoSubTaskSort[id].push(newSubId) // 缓存添加新id
-        storage.setItem('todo-sub-tasks-sort', this.todoSubTaskSort) // 更新缓存
+        }, this.$store)
+        this.todoSubTasksSort[id].push(newSubId) // 缓存添加新id
+        this.$store.dispatch('updateTodoSubTasksSort', this.todoSubTasksSort)
+        // storage.setItem('todo-sub-tasks-sort', this.todoSubTasksSort) // 更新缓存
         this.init()
       }
     },
@@ -495,8 +509,9 @@ export default {
       for (let item of subTasks) {
         tempSort.push(item.sub_id)
       }
-      this.todoSubTaskSort[id] = tempSort
-      storage.setItem('todo-sub-tasks-sort', this.todoSubTaskSort) // 更新缓存
+      this.todoSubTasksSort[id] = tempSort
+      this.$store.dispatch('updateTodoSubTasksSort', this.todoSubTasksSort)
+      // storage.setItem('todo-sub-tasks-sort', this.todoSubTasksSort) // 更新缓存
     },
     /**
      * 点击主任务的···
@@ -545,8 +560,9 @@ export default {
             db.deleteSubTask(subId) // 删除主任务
             if (!isDone) { // 未完成
               // 删除缓存
-              that.todoSubTaskSort[id] = that.removeArrValue(that.todoSubTaskSort[id], subId) // 删除缓存里的subId
-              storage.setItem('todo-sub-tasks-sort', that.todoSubTaskSort) // 更新缓存
+              that.todoSubTasksSort[id] = that.removeArrValue(that.todoSubTasksSort[id], subId) // 删除缓存里的subId
+              that.$store.dispatch('updateTodoSubTasksSort', that.todoSubTasksSort)
+            //  storage.setItem('todo-sub-tasks-sort', that.todoSubTasksSort) // 更新缓存
             }
             that.init()
           }

@@ -5,6 +5,7 @@ const state = {
   workTime: storage.getItem('work-time') || 25,
   restTime: storage.getItem('rest-time') || 5,
   todoTasksSort: storage.getItem('todo-tasks-sort') || [],
+  todoSubTasksSort: storage.getItem('todo-sub-tasks-sort') || [],
   clockStatus: 0
 }
 
@@ -28,6 +29,16 @@ const mutations = {
     state.todoTasksSort = temp
     storage.setItem('todo-tasks-sort', temp)
   },
+  UPDATE_TODO_SUB_TASKS_SORT (state, todoSubTasksSort) { // 更新子任务缓存
+    state.todoSubTasksSort = todoSubTasksSort
+    storage.setItem('todo-sub-tasks-sort', todoSubTasksSort)
+  },
+  PUSH_TODO_SUB_TASKS_SORT (state, [id, sid]) { // 添加新子任务缓存
+    let temp = JSON.parse(JSON.stringify(state.todoSubTasksSort))
+    temp[id].push(sid)
+    state.todoSubTasksSort = temp
+    storage.setItem('todo-sub-tasks-sort', temp)
+  },
   RESET_CLOCK_STATUS (state) {
     state.clockStatus++
   }
@@ -48,6 +59,12 @@ const actions = {
   },
   pushTodoTasksSort ({ commit }, id) {
     commit('PUSH_TODO_TASKS_SORT', id)
+  },
+  updateTodoSubTasksSort ({ commit }, todoSubTasksSort) {
+    commit('UPDATE_TODO_SUB_TASKS_SORT', todoSubTasksSort)
+  },
+  pushTodoSubTasksSort ({ commit }, [id, sid]) {
+    commit('PUSH_TODO_SUB_TASKS_SORT', [id, sid])
   },
   resetClockStatus ({ commit }) {
     commit('RESET_CLOCK_STATUS')

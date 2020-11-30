@@ -243,7 +243,8 @@ export default {
           'task_id': id,
           'is_main': true,
           'begin_time': that.clockData.begin_time,
-          'interrupt': that.clockData.interrupt
+          'interrupt': that.clockData.interrupt,
+          'count': 0
         }).then((res) => {
           // 清空任务名
           that.taskName = ''

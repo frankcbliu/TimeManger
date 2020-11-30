@@ -46,16 +46,14 @@ let mb = menubar({
     'width': 380,
     'height': 420,
     'transparent': true,
-    // 'resizable': false,
+    'skipTaskbar': true,
+    'resizable': false,
     'webPreferences': {
       'nodeIntegration': true,
       'enableRemoteModule': true
     }
   }
 })
-
-// 隐藏 Dock 栏
-app.dock.hide()
 
 // 开机自动登录
 var launch = new AutoLaunch({
@@ -121,7 +119,8 @@ function openSettingWindow () {
     x: 100,
     y: 100,
     useContentSize: true,
-    // resizable: false,
+    skipTaskbar: true,
+    resizable: false,
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true
@@ -148,7 +147,7 @@ function openCompleteWindow () {
     x: 520,
     y: 180,
     useContentSize: true,
-    // resizable: false,
+    resizable: false,
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true
@@ -165,7 +164,13 @@ function openCompleteWindow () {
 // 启动程序时检测一遍
 checkAutoLaunch()
 
+mb.on('after-show', function create () {
+  mb.app.dock.hide()
+  monsole.log('after-show')
+})
+
 mb.on('ready', function ready () {
+  mb.showWindow()
   monsole.log('app is ready')
   // openCompleteWindow()
 })

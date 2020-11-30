@@ -270,7 +270,7 @@ export default {
       notifier.notify(
         {
           title: '番茄钟已完成！',
-          message: '专注了 xx 分钟！ 你真棒！',
+          message: `专注了 ${that.clockData.begin_work_time} 分钟！ 你真棒! `,
           sound: 'default',
           wait: true,
           // icon: require('../assets/notification.png'), // 图标

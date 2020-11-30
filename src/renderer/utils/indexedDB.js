@@ -391,7 +391,7 @@ export default {
       }
       request.onsuccess = function (event) {
         var data = event.target.result
-        data.count++ // 增加子任务番茄钟数量
+        data.sub_count++ // 增加子任务番茄钟数量
         that.bindClockTask( // 绑定主任务
           data.id,
           cost

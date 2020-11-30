@@ -674,23 +674,27 @@ export default {
           }
         })
       )
-      menu.append(
-        new MenuItem({
-          label: '打开完成界面',
-          click: function () {
-            ipcRenderer.send('complete')
-          }
-        })
-      )
-      menu.append(
-        new MenuItem({
-          label: '清空缓存',
-          click: function () {
-            db.clear()
-            storage.clear()
-          }
-        })
-      )
+
+      if (process.env.NODE_ENV === 'development') {
+        menu.append(
+          new MenuItem({
+            label: '打开完成界面',
+            click: function () {
+              ipcRenderer.send('complete')
+            }
+          })
+        )
+        menu.append(
+          new MenuItem({
+            label: '清空缓存',
+            click: function () {
+              db.clear()
+              storage.clear()
+            }
+          })
+        )
+      }
+
       menu.append(
         new MenuItem({
           label: '退出',

@@ -21,6 +21,7 @@
   "build": {
     "productName": "TimeManager",
     "appId": "com.electron.time_manager",
+    "copyright": "Copyright © 2020 菜饼 / CaZn",
     "asar": true,
     "asarUnpack": [
       "./node_modules/node-notifier/vendor/**"

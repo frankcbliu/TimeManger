@@ -33,26 +33,39 @@
                   :key="`todoTasks${item.id}`"
                   class="todoTask"
                 >
-                  <el-checkbox
-                    class="subTask-checkbox"
-                    :label="item.id"
-                    @change="
-                      (isDone) => {
-                        handleCheckedTask(item.id, +isDone, item.subTasks);
-                      }
-                    "
-                    >{{ "" }}</el-checkbox
-                  >
-                  <span
-                    class="taskName"
-                    :ref="`taskName${item.id}`"
-                    @click="editTaskName(item.id)"
-                    spellcheck="false"
-                    @keydown.enter.prevent="changeTaskName(item.id, item.name)"
-                    @blur.prevent="changeTaskName(item.id, item.name)"
-                    >{{ item.name }}</span
-                  >
-                  <div class="taskExpand" @click="taskExpand(item.id, item.isDone, item.subTasks)">···</div>
+                  <div class="taskTop">
+                    <el-checkbox
+                      class="subTask-checkbox"
+                      :label="item.id"
+                      @change="
+                        (isDone) => {
+                          handleCheckedTask(item.id, +isDone, item.subTasks);
+                        }
+                      "
+                      >{{ "" }}</el-checkbox
+                    >
+                    <span
+                      class="taskName"
+                      :ref="`taskName${item.id}`"
+                      @click="editTaskName(item.id)"
+                      spellcheck="false"
+                      @keydown.enter.prevent="
+                        changeTaskName(item.id, item.name)
+                      "
+                      @blur.prevent="changeTaskName(item.id, item.name)"
+                      >{{ item.name }}</span
+                    >
+                    <div class="taskTopRight">
+                      <div class="taskCount">🍅 {{ item.count || 0 }}</div>
+                      <div
+                        class="taskExpand"
+                        @click="taskExpand(item.id, item.isDone, item.subTasks)"
+                      >
+                        ···
+                      </div>
+                    </div>
+                  </div>
+
                   <div class="subTasks">
                     <draggable
                       v-model="item.subTasks"
@@ -65,41 +78,59 @@
                           :key="`subtask${subItem.sub_id}`"
                           class="subTask"
                         >
-                          <el-checkbox
-                            style="zoom: 115%"
-                            :label="subItem.sub_id"
-                            @change="
-                              (isDone) => {
-                                handleCheckedSubTask(
-                                  item.id,
-                                  item.is_done,
+                          <div class="taskTop">
+                            <el-checkbox
+                              style="zoom: 115%"
+                              :label="subItem.sub_id"
+                              @change="
+                                (isDone) => {
+                                  handleCheckedSubTask(
+                                    item.id,
+                                    item.is_done,
+                                    subItem.sub_id,
+                                    +isDone
+                                  );
+                                }
+                              "
+                              >{{ "" }}</el-checkbox
+                            >
+                            <span
+                              class="subTaskName"
+                              :ref="`subTaskName${subItem.sub_id}`"
+                              @click="editSubTaskName(subItem.sub_id)"
+                              spellcheck="false"
+                              @keydown.enter.prevent="
+                                changeSubTaskName(
                                   subItem.sub_id,
-                                  +isDone
-                                );
-                              }
-                            "
-                            >{{ "" }}</el-checkbox
-                          >
-                          <span
-                            class="subTaskName"
-                            :ref="`subTaskName${subItem.sub_id}`"
-                            @click="editSubTaskName(subItem.sub_id)"
-                            spellcheck="false"
-                            @keydown.enter.prevent="
-                              changeSubTaskName(
-                                subItem.sub_id,
-                                subItem.sub_name
-                              )
-                            "
-                            @blur.prevent="
-                              changeSubTaskName(
-                                subItem.sub_id,
-                                subItem.sub_name
-                              )
-                            "
-                            >{{ subItem.sub_name }}</span
-                          >
-                          <div class="taskExpand" @click="subTaskExpand(subItem.sub_id, item.id, subItem.is_done)">···</div>
+                                  subItem.sub_name
+                                )
+                              "
+                              @blur.prevent="
+                                changeSubTaskName(
+                                  subItem.sub_id,
+                                  subItem.sub_name
+                                )
+                              "
+                              >{{ subItem.sub_name }}</span
+                            >
+                            <div class="taskTopRight">
+                              <div class="taskCount">
+                                🍅 {{ subItem.sub_count || 0 }}
+                              </div>
+                              <div
+                                class="taskExpand"
+                                @click="
+                                  subTaskExpand(
+                                    subItem.sub_id,
+                                    item.id,
+                                    subItem.is_done
+                                  )
+                                "
+                              >
+                                ···
+                              </div>
+                            </div>
+                          </div>
                         </el-checkbox-group>
                       </transition-group>
                     </draggable>
@@ -132,26 +163,36 @@
                 :key="`doneTasks${index}`"
                 class="doneTask"
               >
-                <el-checkbox
-                  class="task-checkbox"
-                  :label="item.id"
-                  @change="
-                    (isDone) => {
-                      handleCheckedTask(item.id, +isDone);
-                    }
-                  "
-                  >{{ "" }}</el-checkbox
-                >
-                <span
-                  class="taskName"
-                  :ref="`taskName${item.id}`"
-                  @click="editTaskName(item.id)"
-                  spellcheck="false"
-                  @keydown.enter.prevent="changeTaskName(item.id, item.name)"
-                  @blur.prevent="changeTaskName(item.id, item.name)"
-                  >{{ item.name }}</span
-                >
-                <div class="taskExpand" @click="taskExpand(item.id, item.is_done, item.subTasks)">···</div>
+                <div class="taskTop">
+                  <el-checkbox
+                    class="task-checkbox"
+                    :label="item.id"
+                    @change="
+                      (isDone) => {
+                        handleCheckedTask(item.id, +isDone);
+                      }
+                    "
+                    >{{ "" }}</el-checkbox
+                  >
+                  <span
+                    class="taskName"
+                    :ref="`taskName${item.id}`"
+                    @click="editTaskName(item.id)"
+                    spellcheck="false"
+                    @keydown.enter.prevent="changeTaskName(item.id, item.name)"
+                    @blur.prevent="changeTaskName(item.id, item.name)"
+                    >{{ item.name }}</span
+                  >
+                  <div class="taskTopRight">
+                    <div class="taskCount">🍅 {{ item.count || 0 }}</div>
+                    <div
+                      class="taskExpand"
+                      @click="taskExpand(item.id, item.is_done, item.subTasks)"
+                    >
+                      ···
+                    </div>
+                  </div>
+                </div>
                 <div class="subTasks">
                   <el-checkbox-group
                     v-model="checkSubTasks"
@@ -159,34 +200,53 @@
                     :key="`subtask${subItem.sub_id}`"
                     class="marginBottom"
                   >
-                    <el-checkbox
-                      class="subTask-checkbox"
-                      :label="subItem.sub_id"
-                      @change="
-                        (isDone) => {
-                          handleCheckedSubTask(
-                            item.id,
-                            item.is_done,
-                            subItem.sub_id,
-                            +isDone
-                          );
-                        }
-                      "
-                      >{{ "" }}</el-checkbox
-                    >
-                    <span
-                      class="subTaskName"
-                      :ref="`subTaskName${subItem.sub_id}`"
-                      @click="editSubTaskName(subItem.sub_id)"
-                      spellcheck="false"
-                      @keydown.enter.prevent="
-                        changeSubTaskName(subItem.sub_id, subItem.sub_name)
-                      "
-                      @blur.prevent="
-                        changeSubTaskName(subItem.sub_id, subItem.sub_name)
-                      "
-                      >{{ subItem.sub_name }}</span
-                    >
+                    <div class="taskTop">
+                      <el-checkbox
+                        class="subTask-checkbox"
+                        :label="subItem.sub_id"
+                        @change="
+                          (isDone) => {
+                            handleCheckedSubTask(
+                              item.id,
+                              item.is_done,
+                              subItem.sub_id,
+                              +isDone
+                            );
+                          }
+                        "
+                        >{{ "" }}</el-checkbox
+                      >
+                      <span
+                        class="subTaskName"
+                        :ref="`subTaskName${subItem.sub_id}`"
+                        @click="editSubTaskName(subItem.sub_id)"
+                        spellcheck="false"
+                        @keydown.enter.prevent="
+                          changeSubTaskName(subItem.sub_id, subItem.sub_name)
+                        "
+                        @blur.prevent="
+                          changeSubTaskName(subItem.sub_id, subItem.sub_name)
+                        "
+                        >{{ subItem.sub_name }}</span
+                      >
+                      <div class="taskTopRight">
+                        <div class="taskCount">
+                          🍅 {{ subItem.sub_count || 0 }}
+                        </div>
+                        <div
+                          class="taskExpand"
+                          @click="
+                            subTaskExpand(
+                              subItem.sub_id,
+                              item.id,
+                              subItem.is_done
+                            )
+                          "
+                        >
+                          ···
+                        </div>
+                      </div>
+                    </div>
                   </el-checkbox-group>
                   <el-input
                     v-model="newSubTask[item.id]"
@@ -273,11 +333,15 @@ export default {
     },
     '$store.state.Reload.todoSubTasksSort' (todoSubTasksSort) {
       this.todoSubTasksSort = JSON.parse(JSON.stringify(todoSubTasksSort)) // 拷贝
-      monsole.log('监听到子任务顺序改变', JSON.stringify(this.todoSubTasksSort))
+      monsole.log(
+        '监听到子任务顺序改变',
+        JSON.stringify(this.todoSubTasksSort)
+      )
       this.init()
     }
   },
-  created () { // 删除缓存，测试用
+  created () {
+    // 删除缓存，测试用
     // db.clear()
     // storage.clear()
   },
@@ -314,6 +378,8 @@ export default {
       // 获取子任务并更新选中列表
       for (let item of [...todoTasks, ...doneTasks]) {
         let subTasks = await db.getSubTaskById(item.id) // 获取子任务
+        console.log(this.todoSubTasksSort)
+        console.log(subTasks)
         item.subTasks = this.subTaskSort(subTasks, item.id)
         for (let subItem of item.subTasks) {
           if (subItem.is_done) {
@@ -329,6 +395,8 @@ export default {
       this.todoTasks = this.taskSort(todoTasks) // 排序
       this.checkTasks = checkTasks
       this.checkSubTasks = checkSubTasks
+      console.log(todoTasks)
+      console.log(doneTasks)
     },
     /**
      * 初始化未完成的主任务列表顺序
@@ -336,7 +404,8 @@ export default {
     taskSort (todoTasks) {
       if (this.todoTasksSort) {
         let tempObj = {}
-        for (let item of todoTasks) { // 生成{id: {}}的对象，方便后续获取
+        for (let item of todoTasks) {
+          // 生成{id: {}}的对象，方便后续获取
           tempObj[item.id] = item
         }
         todoTasks = []
@@ -358,10 +427,7 @@ export default {
      */
     subTaskSort (todoSubTasks, id) {
       let tempSort = []
-      if (
-        this.todoSubTasksSort &&
-        this.todoSubTasksSort[id]
-      ) {
+      if (this.todoSubTasksSort && this.todoSubTasksSort[id]) {
         let tempObj = {}
         for (let item of todoSubTasks) {
           tempObj[item.sub_id] = item
@@ -394,11 +460,11 @@ export default {
     async createTask (newTask) {
       if (this.newTask) {
         let taskId = await db.createTask({
-          'name': newTask,
-          'is_done': 0,
-          'sum_time': 0,
-          'done_date': 0,
-          'count': 0
+          name: newTask,
+          is_done: 0,
+          sum_time: 0,
+          done_date: 0,
+          count: 0
         })
         this.$store.dispatch('pushTodoTasksSort', taskId)
       }
@@ -414,13 +480,16 @@ export default {
           this.todoTasksSort.push(id)
           this.$store.dispatch('updateTodoTasksSort', this.todoTasksSort)
         }
-        let newSubId = await db.createSubTask({
-          id: id,
-          name: name,
-          sub_name: newSubTask,
-          is_done: 0,
-          sum_time: 0
-        }, this.$store)
+        let newSubId = await db.createSubTask(
+          {
+            id: id,
+            name: name,
+            sub_name: newSubTask,
+            is_done: 0,
+            sum_time: 0
+          },
+          this.$store
+        )
         this.todoSubTasksSort[id].push(newSubId) // 缓存添加新id
         this.$store.dispatch('updateTodoSubTasksSort', this.todoSubTasksSort)
         // storage.setItem('todo-sub-tasks-sort', this.todoSubTasksSort) // 更新缓存
@@ -530,12 +599,14 @@ export default {
           label: '删除',
           click: function () {
             db.deleteTask(id) // 删除主任务
-            if (!isDone) { // 未完成
+            if (!isDone) {
+              // 未完成
               // 删除缓存
               that.todoTasksSort = that.removeArrValue(that.todoTasksSort, id) // 删除缓存里的id
               that.$store.dispatch('updateTodoTasksSort', that.todoTasksSort)
             }
-            for (let subItem of subTasks) { // 删除所有子任务
+            for (let subItem of subTasks) {
+              // 删除所有子任务
               db.deleteSubTask(subItem.sub_id)
             }
             that.init()
@@ -563,13 +634,16 @@ export default {
         new MenuItem({
           label: '删除',
           click: function () {
-            db.deleteSubTask(subId) // 删除主任务
-            if (!isDone) { // 未完成
-              // 删除缓存
-              that.todoSubTasksSort[id] = that.removeArrValue(that.todoSubTasksSort[id], subId) // 删除缓存里的subId
-              that.$store.dispatch('updateTodoSubTasksSort', that.todoSubTasksSort)
-            //  storage.setItem('todo-sub-tasks-sort', that.todoSubTasksSort) // 更新缓存
-            }
+            db.deleteSubTask(subId) // 删除子任务
+            // 未完成的任务删除缓存
+            that.todoSubTasksSort[id] = that.removeArrValue(
+              that.todoSubTasksSort[id],
+              subId
+            ) // 删除缓存里的subId
+            that.$store.dispatch(
+              'updateTodoSubTasksSort',
+              that.todoSubTasksSort
+            )
             that.init()
           }
         })
@@ -700,7 +774,6 @@ export default {
 }
 .todoTask,
 .doneTask {
-  position: relative;
   padding: 10px 20px;
 }
 .todoTask:hover {
@@ -713,18 +786,31 @@ export default {
 .task-checkbox {
   zoom: 120%;
 }
+.taskTop {
+  position: relative;
+}
 .taskName {
   font-size: 20px;
   font-weight: bold;
   color: #606266;
 }
-.taskExpand {
-  display: inline-block;
+.taskTopRight {
+  display: flex;
   position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
   right: 20px;
   font-size: 20px;
   font-weight: bold;
   color: #606266;
+  cursor: auto;
+}
+.taskCount {
+  display: flex;
+  align-items: center;
+  margin-right: 20px;
+}
+.taskExpand {
   cursor: pointer;
 }
 

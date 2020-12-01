@@ -6,21 +6,22 @@
   </a>
 </p>
 
-> 一款集任务管理和番茄钟功能于一身的时间管理工具。(Only For Mac)
-
+> 一款集**任务管理**和**番茄钟**功能于一身的时间管理工具。(Only For Mac)
 
 A Wonderful Time Management tool: 
 - task management
 - tomato clock
 
-### 🏠 [Homepage](https://github.com/frankcbliu/TimeManger)
+## ✨Demo
 
-## 安装
+todo: 图片
+
+## User Install（安装）
 
 打开[release](https://github.com/frankcbliu/TimeManger/releases)页面，打开`Assets`列表后下载`.dmg`后缀文件到本地安装即可。
 
 
-## Development
+## Developer Install（开发者安装）
 
 ### Install
 
@@ -41,7 +42,7 @@ yarn run build
 
 ## Author
 
-👤 **frankcbliu & CaZn**
+👤 **[frankcbliu](https://github.com/frankcbliu) & [CaZn](https://github.com/CaZn)**
 
 
 ## Show your support
@@ -59,7 +60,7 @@ thanks for these wonderful project:
 
 ## 📝 License
 
-Copyright © 2020 frankcbliu & CaZn.
+Copyright © 2020 [@frankcbliu](https://github.com/frankcbliu) & [@CaZn](https://github.com/CaZn).
 This project is [MIT](https://github.com/kefranabg/readme-md-generator/blob/master/LICENSE) licensed.
 
 ***

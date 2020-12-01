@@ -61,9 +61,11 @@ const mutations = {
     storage.setItem('todo-sub-tasks-sort', temp)
   },
   RESET_CLOCK_STATUS (state) {
+    monsole.log('RESET_CLOCK_STATUS')
     state.clockStatus++
   },
   RESET_TOMATO_CLOCK_NUM (state) {
+    monsole.log('RESET_TOMATO_CLOCK_NUM')
     state.tomatoClockNumVersion++
   }
 }

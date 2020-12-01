@@ -295,9 +295,9 @@ export default {
     },
     async createClock () { // 创建番茄钟记录
       await this.createOrBindClock()
-      ipcRenderer.send('complete-close')
       this.$store.dispatch('resetClockStatus')
       this.$store.dispatch('resetTomatoClockNum')
+      ipcRenderer.send('complete-close')
     },
     async createOrBindClock () {
       let { type: clockType, value: id } = this.operate
@@ -355,18 +355,15 @@ export default {
           })
         })
       } else if (clockType === 'bind_sub_task') { // 绑定子任务
-        db.bindClockSubTask(
-          id,
-          that.clockData.begin_work_time
-        ).then((res) => {
-          db.createClock({
-            'name': res.sub_name,
-            'task_id': id,
-            'is_main': false,
-            'begin_time': that.clockData.begin_time,
-            'interrupt': that.clockData.interrupt
-          }).then((res) => {
-          })
+        // 绑定主任务
+        let res = await db.bindClockSubTask(id)
+        await db.bindClockTask(res.id, that.clockData.begin_work_time)
+        db.createClock({
+          'name': res.sub_name,
+          'task_id': id,
+          'is_main': false,
+          'begin_time': that.clockData.begin_time,
+          'interrupt': that.clockData.interrupt
         })
       }
     }

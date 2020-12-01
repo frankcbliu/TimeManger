@@ -120,11 +120,11 @@ function startElectron () {
   ]
 
   // detect yarn or npm and process commandline args accordingly
-  if (process.env.npm_execpath.endsWith('yarn.js')) {
-    args = args.concat(process.argv.slice(3))
-  } else if (process.env.npm_execpath.endsWith('npm-cli.js')) {
-    args = args.concat(process.argv.slice(2))
-  }
+  // if (process.env.npm_execpath.endsWith('yarn.js')) {
+  //   args = args.concat(process.argv.slice(3))
+  // } else if (process.env.npm_execpath.endsWith('npm-cli.js')) {
+  //   args = args.concat(process.argv.slice(2))
+  // }
 
   electronProcess = spawn(electron, args)
   

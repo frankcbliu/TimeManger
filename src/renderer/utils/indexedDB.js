@@ -363,7 +363,7 @@ export default {
       }
       request.onsuccess = function (event) {
         var data = event.target.result
-        monsole.log('bindClockTask: ', JSON.stringify(data))
+        monsole.log('bindClockTask', JSON.stringify(data))
         data.count = data.count ? data.count + 1 : 1
         data.sum_time = data.sum_time ? cost + data.sum_time : cost
         // 把更新过的对象放回数据库
@@ -372,6 +372,7 @@ export default {
           reject(new Error('更新数据失败'))
         }
         requestUpdate.onsuccess = function (event) {
+          monsole.log('更新成功: bindClockTask: ', event.isTrusted, JSON.stringify(data))
           resolve(data)
         }
       }
@@ -381,11 +382,9 @@ export default {
   /**
    * 给子任务增加番茄钟数量, 给对应的主任务增加番茄钟数量和时间
    * @param {Number} subId
-   * @param {Number} cost 单位：分钟
    */
-  bindClockSubTask (subId, cost) {
-    monsole.log('bindClockSubTask: subId', subId, ' cost: ', cost)
-    let that = this
+  bindClockSubTask (subId) {
+    monsole.log('bindClockSubTask: ', subId)
     let objectStore = this.db.transaction(['sub_task'], 'readwrite').objectStore('sub_task')
     let request = objectStore.get(subId)
     return new Promise((resolve, reject) => {
@@ -394,19 +393,18 @@ export default {
       }
       request.onsuccess = function (event) {
         var data = event.target.result
-        monsole.log('当前子任务的番茄钟数量：', JSON.stringify(data))
+        monsole.log('bindClockSubTask: ', JSON.stringify(data))
+
         data.sub_count = data.sub_count ? data.sub_count + 1 : 1 // 增加子任务番茄钟数量
-        that.bindClockTask( // 绑定主任务
-          data.id,
-          cost
-        ).then((res) => {
-        })
+
         // 把更新过的对象放回数据库
         var requestUpdate = objectStore.put(data)
         requestUpdate.onerror = function (event) {
+          monsole.log('[error]更新数据失败: ', event)
           reject(new Error('更新数据失败'))
         }
         requestUpdate.onsuccess = function (event) {
+          monsole.log('更新成功: bindClockSubTask: ', event.isTrusted, JSON.stringify(data))
           resolve(data)
         }
       }

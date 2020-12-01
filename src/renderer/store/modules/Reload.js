@@ -15,12 +15,16 @@ function initLog () {
   let log = electronLog.create('reload')
   let mlog = log.functions.log
   log.functions.log = function (...params) {
-    mlog('[reload]', ...params)
+    if (process.env.NODE_ENV === 'production') {
+      mlog('[reload]', ...params)
+    } else {
+      mlog('[dev][reload]', ...params)
+    }
   }
   return log.functions
 }
 
-const monsole = process.env.NODE_ENV === 'production' ? initLog() : console
+const monsole = initLog()
 
 const mutations = {
   CHANGE_SOUND (state, sound) {

@@ -1,7 +1,7 @@
 // 'use strict'
 import storage from '../renderer/utils/storage.js'
 import '../renderer/store'
-
+import { autoUpdater } from 'electron-updater'
 const console = require('console')
 const { app, ipcMain, BrowserWindow } = require('electron')
 let { menubar } = require('menubar')
@@ -47,7 +47,7 @@ let mb = menubar({
     'height': 420,
     'transparent': true,
     'skipTaskbar': true,
-    'resizable': false,
+    'resizable': process.env.NODE_ENV === 'development',
     'webPreferences': {
       'nodeIntegration': true,
       'enableRemoteModule': true
@@ -120,7 +120,7 @@ function openSettingWindow () {
     y: 100,
     useContentSize: true,
     skipTaskbar: true,
-    resizable: false,
+    resizable: process.env.NODE_ENV === 'development',
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true
@@ -147,7 +147,7 @@ function openCompleteWindow () {
     x: 520,
     y: 180,
     useContentSize: true,
-    resizable: false,
+    resizable: process.env.NODE_ENV === 'development',
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true
@@ -169,10 +169,44 @@ mb.on('after-show', function create () {
   monsole.log('after-show')
 })
 
+const checkForUpdate = function () {
+  monsole.log('开始检测更新')
+  autoUpdater.checkForUpdatesAndNotify()
+  // 当前版本为最新版本
+  autoUpdater.on('update-not-available', function () {
+    monsole.log('当前版本为最新版本')
+  })
+  // 更新错误
+  autoUpdater.on('error', function (error) {
+    monsole.log('更新错误', error)
+  })
+  // 检查事件
+  autoUpdater.on('checking-for-update', function () {
+    monsole.log('检查更新')
+  })
+  // 发现新版本
+  autoUpdater.on('update-available', function () {
+    monsole.log('发现新版本')
+  })
+  // 更新下载进度事件
+  autoUpdater.on('download-progress', function (progressObj) {
+    monsole.log('更新下载进度事件')
+  })
+
+  // 下载完毕
+  // autoUpdater.on('update-downloaded', function (event, releaseNotes, releaseName, releaseDate, updateUrl, quitAndUpdate) {
+  autoUpdater.on('update-downloaded', function () {
+    // 退出并进行安装（这里可以做成让用户确认后再调用）
+    autoUpdater.quitAndInstall()
+    monsole.log('下载完毕')
+  })
+}
+
 mb.on('ready', function ready () {
   mb.showWindow()
   monsole.log('app is ready')
   // openCompleteWindow()
+  checkForUpdate()
 })
 
 // 开启配置选项

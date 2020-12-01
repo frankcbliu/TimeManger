@@ -173,6 +173,11 @@
   resolved "https://r.cnpmjs.org/@types/node/download/@types/node-12.19.7.tgz#cf8b6ac088dd9182ac9a1d765f787a8d12490c04"
   integrity sha1-z4tqwIjdkYKsmh12X3h6jRJJDAQ=
 
+"@types/semver@^7.3.1":
+  version "7.3.4"
+  resolved "https://r.cnpmjs.org/@types/semver/download/@types/semver-7.3.4.tgz#43d7168fec6fa0988bb1a513a697b29296721afb"
+  integrity sha1-Q9cWj+xvoJiLsaUTppeykpZyGvs=
+
 "@types/yargs-parser@*":
   version "15.0.0"
   resolved "https://r.cnpmjs.org/@types/yargs-parser/download/@types/yargs-parser-15.0.0.tgz#cb3f9f741869e20cce330ffbeb9271590483882d"
@@ -3351,6 +3356,19 @@ electron-to-chromium@^1.2.7, electron-to-chromium@^1.3.47:
   resolved "https://r.cnpmjs.org/electron-to-chromium/download/electron-to-chromium-1.3.605.tgz#bcc0b72f252ee2c51792b1f2b8707957fc707db5"
   integrity sha1-vMC3LyUu4sUXkrHyuHB5V/xwfbU=
 
+electron-updater@^4.3.5:
+  version "4.3.5"
+  resolved "https://r.cnpmjs.org/electron-updater/download/electron-updater-4.3.5.tgz#4fb36f593a031c87ea07ee141c9f064d5deffb15"
+  integrity sha1-T7NvWToDHIfqB+4UHJ8GTV3v+xU=
+  dependencies:
+    "@types/semver" "^7.3.1"
+    builder-util-runtime "8.7.2"
+    fs-extra "^9.0.1"
+    js-yaml "^3.14.0"
+    lazy-val "^1.0.4"
+    lodash.isequal "^4.5.0"
+    semver "^7.3.2"
+
 electron@^11.0.3:
   version "11.0.3"
   resolved "https://r.cnpmjs.org/electron/download/electron-11.0.3.tgz#c29eaacda38ce561890e59906ca5f507c72b3ec4"
@@ -5589,6 +5607,11 @@ lodash.isarray@^3.0.0:
   version "3.0.4"
   resolved "https://r.cnpmjs.org/lodash.isarray/download/lodash.isarray-3.0.4.tgz#79e4eb88c36a8122af86f844aa9bcd851b5fbb55"
   integrity sha1-eeTriMNqgSKvhvhEqpvNhRtfu1U=
+
+lodash.isequal@^4.5.0:
+  version "4.5.0"
+  resolved "https://r.cnpmjs.org/lodash.isequal/download/lodash.isequal-4.5.0.tgz#415c4478f2bcc30120c22ce10ed3226f7d3e18e0"
+  integrity sha1-QVxEePK8wwEgwizhDtMib30+GOA=
 
 lodash.isplainobject@^3.0.0:
   version "3.2.0"

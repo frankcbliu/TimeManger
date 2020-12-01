@@ -8,13 +8,16 @@ function initLog () {
   let log = electronLog.create('indexedDB')
   let mlog = log.functions.log
   log.functions.log = function (...params) {
-    mlog('[indexedDB]', ...params)
+    if (process.env.NODE_ENV === 'production') {
+      mlog('[indexedDB]', ...params)
+    } else {
+      mlog('[dev][indexedDB]', ...params)
+    }
   }
   return log.functions
 }
 
-const monsole = process.env.NODE_ENV === 'production' ? initLog() : console
-// const monsole = initLog()
+const monsole = initLog()
 
 export default {
   // indexedDB兼容
@@ -361,8 +364,8 @@ export default {
       request.onsuccess = function (event) {
         var data = event.target.result
         monsole.log('bindClockTask: ', JSON.stringify(data))
-        data.count = data.count + 1
-        data.sum_time = cost + data.sum_time
+        data.count = data.count ? data.count + 1 : 1
+        data.sum_time = data.sum_time ? cost + data.sum_time : cost
         // 把更新过的对象放回数据库
         var requestUpdate = objectStore.put(data)
         requestUpdate.onerror = function (event) {
@@ -391,7 +394,8 @@ export default {
       }
       request.onsuccess = function (event) {
         var data = event.target.result
-        data.sub_count++ // 增加子任务番茄钟数量
+        monsole.log('当前子任务的番茄钟数量：', JSON.stringify(data))
+        data.sub_count = data.sub_count ? data.sub_count + 1 : 1 // 增加子任务番茄钟数量
         that.bindClockTask( // 绑定主任务
           data.id,
           cost

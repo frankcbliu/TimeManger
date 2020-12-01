@@ -16,7 +16,8 @@
     "pack": "npm run pack:main && npm run pack:renderer",
     "pack:main": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.main.config.js",
     "pack:renderer": "cross-env NODE_ENV=production webpack --progress --colors --config .electron-vue/webpack.renderer.config.js",
-    "postinstall": "npm run lint:fix"
+    "postinstall": "npm run lint:fix",
+    "release": "node .electron-vue/build.js && electron-builder -p always"
   },
   "build": {
     "productName": "TimeManager",
@@ -47,6 +48,9 @@
         }
       ]
     },
+    "publish": {
+      "provider": "github"
+    },
     "mac": {
       "icon": "build/icons/icon.icns"
     },
@@ -57,6 +61,7 @@
   "dependencies": {
     "axios": "^0.18.0",
     "electron-store": "^6.0.1",
+    "electron-updater": "^4.3.5",
     "node-notifier": "^8.0.0"
   },
   "devDependencies": {

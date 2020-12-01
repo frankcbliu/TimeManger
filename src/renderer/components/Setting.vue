@@ -11,9 +11,12 @@
       </el-radio-group>
     </div>
     <div id="mid" v-show="activeName === 'one'">
-      <div id="card" style="height: 13%">
+      <div id="card" style="height: 20%">
         <el-checkbox v-model="autoLaunch" @change="autoStart"
           >开机自启动</el-checkbox
+        >
+        <el-checkbox v-model="audoUpdate" @change="changeAutoUpdate"
+          >自动检测更新</el-checkbox
         >
       </div>
       <div id="card" style="height: 30%">
@@ -88,6 +91,7 @@ export default {
     return {
       activeName: 'one',
       autoLaunch: false, // 开机自启动
+      audoUpdate: false, // 自动更新
       workTime: 25, // 工作钟时长
       restTime: 5, // 休息钟时长
       options: [{
@@ -108,17 +112,17 @@ export default {
   },
   mounted () {
     this.autoLaunch = storage.getItem('auto-launch') || false
+    this.audoUpdate = storage.getItem('auto-update') || false
     this.workTime = storage.getItem('work-time') || 25
     this.restTime = storage.getItem('rest-time') || 5
     this.clockSound = storage.getItem('clock-bg-sound') || 'dida.mp3'
   },
   methods: {
     autoStart () { // 根据自启配置修改缓存
-      if (this.autoLaunch) {
-        storage.setItem('auto-launch', true)
-      } else {
-        storage.setItem('auto-launch', false)
-      }
+      storage.setItem('auto-launch', this.autoLaunch)
+    },
+    changeAutoUpdate () { // 根据配置修改缓存
+      storage.setItem('auto-update', this.audoUpdate)
     },
     updateWorkTime () { // 工作时间
       storage.setItem('work-time', this.workTime)
@@ -181,7 +185,7 @@ body {
   margin-bottom: 2%;
 }
 #card .el-checkbox {
-  margin-bottom: 1%;
+  margin-bottom: 1.5%;
 }
 
 #card > div {

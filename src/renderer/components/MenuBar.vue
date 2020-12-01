@@ -349,6 +349,11 @@ export default {
     // storage.clear()
   },
   async mounted () {
+    ipcRenderer.on('new-version', (event, text, err) => {
+      if (window.confirm('检测到新版本，是否立刻更新？')) {
+        ipcRenderer.send('quitAndInstall')
+      }
+    })
     await db.initDB()
     this.init()
     let tasksRef = this.$refs['tasks']

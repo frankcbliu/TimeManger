@@ -25,6 +25,9 @@ function initLog () {
   log.functions.log('-----------------------启动日志-----------------------')
   log.functions.log('日志文件路径：', log.transports.file.getFile().path)
   log.functions.log('-----------------------------------------------------')
+  // 将自动更新的 log 改为 electron-log
+  autoUpdater.logger = log
+  autoUpdater.logger.transports.file.level = 'info'
   return log.functions
 }
 
@@ -170,35 +173,41 @@ mb.on('after-show', function create () {
 })
 
 const checkForUpdate = function () {
-  monsole.log('开始检测更新')
   autoUpdater.checkForUpdatesAndNotify()
-  // 当前版本为最新版本
-  autoUpdater.on('update-not-available', function () {
-    monsole.log('当前版本为最新版本')
-  })
+
   // 更新错误
-  autoUpdater.on('error', function (error) {
-    monsole.log('更新错误', error)
+  autoUpdater.on('error', function (err) {
+    monsole.log('[version] Error in auto-updater. ' + err)
   })
   // 检查事件
   autoUpdater.on('checking-for-update', function () {
-    monsole.log('检查更新')
+    monsole.log('[version] Checking for update...')
   })
   // 发现新版本
   autoUpdater.on('update-available', function () {
-    monsole.log('发现新版本')
+    monsole.log('[version] 发现新版本...')
   })
+  let rate = 0
   // 更新下载进度事件
   autoUpdater.on('download-progress', function (progressObj) {
-    monsole.log('更新下载进度事件')
+    if (Number(progressObj.percent) > rate) {
+      let message = '[version] speed: ' + (Number(progressObj.bytesPerSecond) / 1024).toFixed(2) + ' kb/s'
+      message += ' - ' + Number(progressObj.percent).toFixed(2) + '%'
+      message += ' (' + Number(progressObj.transferred / 1024).toFixed(2) + '/' + Number(progressObj.total / 1024).toFixed(2) + ')'
+      monsole.log(message)
+      rate += 0.1
+    }
   })
 
   // 下载完毕
-  // autoUpdater.on('update-downloaded', function (event, releaseNotes, releaseName, releaseDate, updateUrl, quitAndUpdate) {
   autoUpdater.on('update-downloaded', function () {
+    monsole.log('Update downloaded')
+    mb.window.webContents.send('new-version')
     // 退出并进行安装（这里可以做成让用户确认后再调用）
-    autoUpdater.quitAndInstall()
-    monsole.log('下载完毕')
+    ipcMain.on('quitAndInstall', () => {
+      monsole.log('立即退出并重新安装')
+      autoUpdater.quitAndInstall()
+    })
   })
 }
 
@@ -206,7 +215,10 @@ mb.on('ready', function ready () {
   mb.showWindow()
   monsole.log('app is ready')
   // openCompleteWindow()
-  checkForUpdate()
+  monsole.log('当前自动更新配置: ', storage.getItem('auto-update'))
+  if (storage.getItem('auto-update') === true) {
+    checkForUpdate()
+  }
 })
 
 // 开启配置选项

@@ -174,14 +174,15 @@ mb.on('after-show', function create () {
 
 const checkForUpdate = function () {
   autoUpdater.checkForUpdatesAndNotify()
+  monsole.log('当前版本: ', mb.app.getVersion())
 
   // 更新错误
   autoUpdater.on('error', function (err) {
-    monsole.log('[version] Error in auto-updater. ' + err)
+    monsole.log('[version] 更新出错: ' + err)
   })
   // 检查事件
   autoUpdater.on('checking-for-update', function () {
-    monsole.log('[version] Checking for update...')
+    monsole.log('[version] 正在检查更新...')
   })
   // 发现新版本
   autoUpdater.on('update-available', function () {
@@ -191,9 +192,16 @@ const checkForUpdate = function () {
   // 更新下载进度事件
   autoUpdater.on('download-progress', function (progressObj) {
     if (Number(progressObj.percent) > rate) {
-      let message = '[version] speed: ' + (Number(progressObj.bytesPerSecond) / 1024).toFixed(2) + ' kb/s'
+      let speed = Number(progressObj.bytesPerSecond) / 1024
+      let message = '[version] speed: ' + speed.toFixed(2) + ' kb/s'
       message += ' - ' + Number(progressObj.percent).toFixed(2) + '%'
       message += ' (' + Number(progressObj.transferred / 1024).toFixed(2) + '/' + Number(progressObj.total / 1024).toFixed(2) + ')'
+      let minus = (progressObj.total - progressObj.transferred) / speed / 1000
+      if (minus > 60) {
+        message += ' - 剩余时间: ' + Number(minus / 60).toFixed(2) + ' min'
+      } else {
+        message += ' - 剩余时间: ' + Number(minus).toFixed(2) + ' s'
+      }
       monsole.log(message)
       rate += 0.1
     }

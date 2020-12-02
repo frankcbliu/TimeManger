@@ -7,7 +7,8 @@ const state = {
   todoTasksSort: storage.getItem('todo-tasks-sort') || [],
   todoSubTasksSort: storage.getItem('todo-sub-tasks-sort') || [],
   clockStatus: 0,
-  tomatoClockNumVersion: 0 // 番茄钟数量版本，有变化则需要刷新
+  tomatoClockNumVersion: 0, // 番茄钟数量版本，有变化则需要刷新
+  openSound: storage.getItem('clock-open-sound') || true
 }
 
 function initLog () {
@@ -67,6 +68,10 @@ const mutations = {
   RESET_TOMATO_CLOCK_NUM (state) {
     monsole.log('RESET_TOMATO_CLOCK_NUM')
     state.tomatoClockNumVersion++
+  },
+  CHANGE_MUTED (state, openSound) {
+    monsole.log('CHANGE_MUTED ', openSound)
+    state.openSound = openSound
   }
 }
 
@@ -97,6 +102,9 @@ const actions = {
   },
   resetTomatoClockNum ({ commit }) {
     commit('RESET_TOMATO_CLOCK_NUM')
+  },
+  changeMuted ({ commit }, openSound) {
+    commit('CHANGE_MUTED', openSound)
   }
 }
 

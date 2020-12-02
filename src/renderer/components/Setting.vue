@@ -46,6 +46,13 @@
     </div>
     <div id="mid" v-show="activeName === 'two'">
       <audio :src="clock_bg_sound" ref="audio" loop></audio>
+      <div id="card" style="height: 12%">
+        <div>
+          <el-checkbox v-model="openSound" @change="changeMuted"
+            >开启背景音乐</el-checkbox
+          >
+        </div>
+      </div>
       <div id="card" style="height: 18%">
         <div>
           <span style="width: 18%; font-size: 18px; line-height: 40px"
@@ -94,17 +101,19 @@ export default {
       audoUpdate: false, // 自动更新
       workTime: 25, // 工作钟时长
       restTime: 5, // 休息钟时长
-      options: [{
-        value: 'dida.mp3',
-        label: '嘀嗒'
-      },
-      {
-        value: 'fatiao.mp3',
-        label: '发条嘀嗒'
-      }, {
-        value: 'rain.mp3',
-        label: '雨声'
-      }],
+      openSound: true, // 是否打开声音
+      options: [
+        {
+          value: 'dida.mp3',
+          label: '嘀嗒'
+        },
+        {
+          value: 'fatiao.mp3',
+          label: '发条嘀嗒'
+        }, {
+          value: 'rain.mp3',
+          label: '雨声'
+        }],
       clock_bg_sound: null,
       clockSound: '',
       clockHandleId: null
@@ -116,6 +125,7 @@ export default {
     this.workTime = storage.getItem('work-time') || 25
     this.restTime = storage.getItem('rest-time') || 5
     this.clockSound = storage.getItem('clock-bg-sound') || 'dida.mp3'
+    this.openSound = storage.getItem('clock-open-sound') || true
   },
   methods: {
     autoStart () { // 根据自启配置修改缓存
@@ -146,6 +156,10 @@ export default {
         audio.pause()
         audio.currentTime = 0
       }, 2000)
+    },
+    changeMuted () { // 是否开启背景音乐
+      storage.setItem('clock-open-sound', this.openSound)
+      this.$store.dispatch('changeMuted', this.openSound)
     }
   }
 }

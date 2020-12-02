@@ -79,7 +79,8 @@ function initLog () {
   return log.functions
 }
 
-const monsole = process.env.NODE_ENV === 'production' ? initLog() : console
+// const monsole = process.env.NODE_ENV === 'production' ? initLog() : console
+const monsole = initLog()
 
 export default {
   name: 'tomato-clock',
@@ -115,6 +116,9 @@ export default {
       this.clockStatus = 'init'
       this.taskName = ''
       this.input_icon = 'el-icon-edit'
+    },
+    '$store.state.Reload.openSound' (openSound) { // openSound 是 是否打开背景音乐，与 是否静音相反
+      this.$refs['audio'].muted = !openSound
     },
     '$store.state.Reload.reloadSound' (sound) { // 监听音频配置
       if (this.clockStatus !== 'init') { this.clockStatus = 'pending' }
@@ -183,6 +187,7 @@ export default {
     this.workTime = storage.getItem('work-time') || 25
     this.restTime = storage.getItem('rest-time') || 5
     this.clock_bg_sound = require('../assets/' + (storage.getItem('clock-bg-sound') || 'dida.mp3'))
+    this.$refs['audio'].muted = !!storage.getItem('clock-open-sound')
     this.clockStatus = 'init' // 执行初始化
   },
 
@@ -239,30 +244,29 @@ export default {
       audio.pause()
       audio.currentTime = 0
     },
-    completeMainTaskClock (isMain) { // 创建属于主任务的番茄钟数据
-      let that = this
+    async completeMainTaskClock (isMain) { // 创建属于主任务的番茄钟数据
+      monsole.log('快捷创建主任务')
       // 先创建主任务
-      db.createTask({
-        'name': that.taskName,
+      let taskId = await db.createTask({
+        'name': this.taskName,
         'is_done': 0,
         'count': 1,
-        'sum_time': that.clockData.begin_work_time,
+        'sum_time': this.clockData.begin_work_time,
         'done_date': 0
-      }).then((taskId) => {
-        that.$store.dispatch('pushTodoTasksSort', taskId)
-        db.createClock({
-          'name': that.taskName,
-          'task_id': taskId,
-          'is_main': true,
-          'begin_time': that.clockData.begin_time,
-          'interrupt': that.clockData.interrupt,
-          'count': 0
-        }).then((res) => {
-          // 清空任务名
-          that.taskName = ''
-          that.input_icon = 'el-icon-edit'
-        })
       })
+      this.$store.dispatch('pushTodoTasksSort', taskId)
+      await db.createClock({
+        'name': this.taskName,
+        'task_id': taskId,
+        'is_main': true,
+        'begin_time': this.clockData.begin_time,
+        'interrupt': this.clockData.interrupt,
+        'count': 0
+      })
+      // 清空任务名
+      this.clockStatus = 'init'
+      this.taskName = ''
+      this.input_icon = 'el-icon-edit'
     },
 
     showNotification () { // 展示通知栏
@@ -285,7 +289,7 @@ export default {
           if (metadata.activationType === 'closed') {
             ipcRenderer.send('complete')
           } else { // contentsClicked / actionClicked
-            monsole.warn('activationType: ', metadata.activationType)
+            monsole.log('activationType: ', metadata.activationType)
             // 点击完成
             if (that.taskName !== '' && metadata.activationType === 'actionClicked') { // 任务名非空，默认创建主任务
               that.completeMainTaskClock()

@@ -312,7 +312,7 @@ export default {
   },
   data () {
     return {
-      activeName: 'one',
+      activeName: 'two',
       todoTasks: [], // 未完成的任务
       doneTasks: [], // 已完成的任务
       isShowDoneTasks: false,

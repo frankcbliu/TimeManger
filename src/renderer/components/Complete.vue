@@ -303,25 +303,7 @@ export default {
       let { type: clockType, value: id } = this.operate
       monsole.log('operate: ', JSON.stringify(this.operate))
       let that = this
-      if (clockType === 'new_task') { // 创建主任务
-        // 先创建主任务
-        let taskId = await db.createTask({
-          'name': that.taskName,
-          'is_done': 0,
-          'count': 1,
-          'sum_time': that.clockData.begin_work_time,
-          'done_date': 0
-        })
-        this.$store.dispatch('pushTodoTasksSort', taskId)
-        let res = await db.createClock({
-          'name': that.taskName,
-          'task_id': taskId,
-          'is_main': true,
-          'begin_time': that.clockData.begin_time,
-          'interrupt': that.clockData.interrupt
-        })
-        monsole.log('res: ', JSON.stringify(res))
-      } else if (clockType === 'new_sub_task') { // 创建子任务
+      if (clockType === 'new_sub_task') { // 创建子任务
         monsole.log('创建子任务')
         let task = await db.bindClockTask(id, that.clockData.begin_work_time) // 获取主任务名称
         monsole.log('bindClockTask result: ', JSON.stringify(task))
@@ -365,6 +347,24 @@ export default {
           'begin_time': that.clockData.begin_time,
           'interrupt': that.clockData.interrupt
         })
+      } else { // if (clockType === 'new_task') { // 创建主任务
+        // 先创建主任务
+        let taskId = await db.createTask({
+          'name': that.taskName,
+          'is_done': 0,
+          'count': 1,
+          'sum_time': that.clockData.begin_work_time,
+          'done_date': 0
+        })
+        this.$store.dispatch('pushTodoTasksSort', taskId)
+        let res = await db.createClock({
+          'name': that.taskName,
+          'task_id': taskId,
+          'is_main': true,
+          'begin_time': that.clockData.begin_time,
+          'interrupt': that.clockData.interrupt
+        })
+        monsole.log('默认创建主任务 res: ', JSON.stringify(res))
       }
     }
   }

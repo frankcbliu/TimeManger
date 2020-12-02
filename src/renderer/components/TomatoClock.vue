@@ -1,10 +1,10 @@
 <template>
   <div style="width: 100%; height: 100%">
     <div class="main">
-      <div class="clock">
+      <div class="clock" :class="{resting: clockStatus === 'resting'}">
         <!-- 右半边半圆背景  -->
         <div class="pie_mod pie_right">
-          <div class="close" v-show="clockStatus !== 'init'" @click="abandon">
+          <div class="close" v-show="clockStatus !== 'init' && clockStatus !== 'resting'" @click="abandon">
             <i class="el-icon-circle-close"></i>
           </div>
           <!-- 右边半圆 -->
@@ -113,9 +113,7 @@ export default {
   },
   watch: {
     '$store.state.Reload.clockStatus' () { // 刷新状态
-      this.clockStatus = 'init'
-      this.taskName = ''
-      this.input_icon = 'el-icon-edit'
+      this.clockStatus = 'resting'
     },
     '$store.state.Reload.openSound' (openSound) { // openSound 是 是否打开背景音乐，与 是否静音相反
       this.$refs['audio'].muted = !openSound
@@ -167,9 +165,21 @@ export default {
         this.clock_icon = 'el-icon-video-play'
         clearInterval(this.clockHandleId)
         this.closeAudio()
+      } else if (status === 'resting') { // 时钟处于休息状态
+        monsole.log('休息时长: ', this.restTime)
+        // 清空任务名
+        this.taskName = ''
+        this.input_icon = 'el-icon-edit'
+        // 开启休息的番茄钟
+        this.clock_icon = 'el-icon-close'
+        this.restSec = this.restTime * 60
+        this.secDeg = 360 / this.restSec // 计算每秒所占度数
+        this.curDeg = 0
+        this.updateTime(this.restSec, 'init')
       }
     },
     curDeg (newDeg) { // 监听当前角度变化
+      console.log(this.curDeg)
       let pie1 = this.$refs['pie1']
       let pie2 = this.$refs['pie2']
       if (newDeg <= 180) {
@@ -217,25 +227,40 @@ export default {
           'name': this.clockData.interruptName,
           'cost': Math.round(datetime.getTimeStamp() - this.clockData.interruptStart)
         })
+      } else if (this.clockStatus === 'resting') {
+        this.clockStatus = 'init'
       }
     },
 
     start () { // 开始计时
-      this.updateTime(this.restSec)
+      this.updateTime(this.restSec, 'completed')
       setTimeout(() => {
         if (this.clockStatus !== 'timing') { return }
         this.$refs['audio'].play()
       }, 1000)
     },
 
-    updateTime (sec) { // 更新倒计时文字
+    updateTime (sec, nextStatus) { // 更新倒计时文字
+      let changeTime = this.clockStatus === 'resting' ? this.restTime : this.workTime
       this.clockHandleId = setInterval(() => {
         sec = sec - 1
-        this.curDeg = this.secDeg * (this.workTime * 60 - sec) // 更新当前度数
+        this.curDeg = this.secDeg * (changeTime * 60 - sec) // 更新当前度数
         this.clock_time = datetime.formatClockTime(sec)
         this.restSec = sec
         if (sec === 0) { // 到时间结束
-          this.clockStatus = 'completed'
+          if (this.clockStatus === 'resting') {
+            let that = this
+            notifier.notify(
+              {
+                title: '休息结束！',
+                message: `休息了 ${that.restTime} 分钟，打起精神来! `,
+                sound: 'default',
+                wait: false,
+                sender: 'com.electron.timemanager' // 见 Info.plist 文件中的 CFBundleIdentifier 字段 https://github.com/julienXX/terminal-notifier
+              }
+            )
+          }
+          this.clockStatus = nextStatus // 'completed'
         }
       }, 1000)
     },
@@ -264,9 +289,7 @@ export default {
         'count': 0
       })
       // 清空任务名
-      this.clockStatus = 'init'
-      this.taskName = ''
-      this.input_icon = 'el-icon-edit'
+      this.$store.dispatch('resetClockStatus')
     },
 
     showNotification () { // 展示通知栏
@@ -383,8 +406,7 @@ export default {
 .clock_bg {
   width: 120px;
   height: 120px;
-  /* background-color: red; */
-  background: #da9169;
+  background-color: #da9169;
   border-radius: 60px;
   position: absolute;
 }
@@ -417,6 +439,21 @@ export default {
   background-color: #e2a48f;
   color: rgba(256, 256, 256, 0.6);
   zoom: 150%;
+}
+/* 边颜色 */
+.resting .pie {
+  background-color: #6FD2B9;
+}
+/* 背景颜色 */
+.resting .clock_time {
+  background-color: #3CBD9D;
+}
+.resting .clock_button > i {
+  background-color: #3CBD9D;
+}
+/* 进度条颜色 */
+.resting .clock_bg { 
+  background-color: #009670;
 }
 </style>
 

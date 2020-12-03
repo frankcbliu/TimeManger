@@ -291,6 +291,7 @@ export default {
       return arr
     },
     abandon () { // 放弃这个番茄钟
+      this.$store.dispatch('resetClockStatus')
       ipcRenderer.send('complete-close')
     },
     async createClock () { // 创建番茄钟记录

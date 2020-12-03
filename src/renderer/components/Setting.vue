@@ -125,7 +125,7 @@ export default {
     this.workTime = storage.getItem('work-time') || 25
     this.restTime = storage.getItem('rest-time') || 5
     this.clockSound = storage.getItem('clock-bg-sound') || 'dida.mp3'
-    this.openSound = storage.getItem('clock-open-sound') || true
+    this.openSound = !storage.getItem('clock-is-muted')
   },
   methods: {
     autoStart () { // 根据自启配置修改缓存
@@ -158,8 +158,8 @@ export default {
       }, 2000)
     },
     changeMuted () { // 是否开启背景音乐
-      storage.setItem('clock-open-sound', this.openSound)
-      this.$store.dispatch('changeMuted', this.openSound)
+      storage.setItem('clock-is-muted', !this.openSound)
+      this.$store.dispatch('isMuted', !this.openSound)
     }
   }
 }

@@ -15,6 +15,9 @@ const iconURL = process.env.NODE_ENV === 'development'
   ? `static/icon/logo.png`
   : `${__dirname}/static/icon/logo.png`
 
+// 清理旧版本缓存
+if (storage.getItem('clock-open-sound')) { storage.removeItem('clock-open-sound') }
+
 // 初始化日志
 function initLog () {
   const electronLog = require('electron-log')

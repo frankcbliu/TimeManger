@@ -115,8 +115,8 @@ export default {
     '$store.state.Reload.clockStatus' () { // 刷新状态
       this.clockStatus = 'resting'
     },
-    '$store.state.Reload.openSound' (openSound) { // openSound 是 是否打开背景音乐，与 是否静音相反
-      this.$refs['audio'].muted = !openSound
+    '$store.state.Reload.isMuted' (isMuted) { // isMuted 是否静音
+      this.$refs['audio'].muted = isMuted
     },
     '$store.state.Reload.reloadSound' (sound) { // 监听音频配置
       if (this.clockStatus !== 'init') { this.clockStatus = 'pending' }
@@ -196,8 +196,8 @@ export default {
   async mounted () {
     this.workTime = storage.getItem('work-time') || 25
     this.restTime = storage.getItem('rest-time') || 5
+    this.$refs['audio'].muted = Boolean(storage.getItem('clock-is-muted'))
     this.clock_bg_sound = require('../assets/' + (storage.getItem('clock-bg-sound') || 'dida.mp3'))
-    this.$refs['audio'].muted = !!storage.getItem('clock-open-sound')
     this.clockStatus = 'init' // 执行初始化
   },
 

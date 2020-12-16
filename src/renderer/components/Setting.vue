@@ -159,7 +159,7 @@ export default {
     },
     changeMuted () { // 是否开启背景音乐
       storage.setItem('clock-is-muted', !this.openSound)
-      this.$store.dispatch('isMuted', !this.openSound)
+      this.$store.dispatch('changeMuted', !this.openSound)
     }
   }
 }

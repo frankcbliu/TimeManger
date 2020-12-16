@@ -12,7 +12,7 @@ export default {
 
 <style>
 /* CSS */
-@import url("https://fonts.googleapis.com/css?family=Source+Sans+Pro");
+@import url("./assets/font.css");
 
 * {
   box-sizing: border-box;

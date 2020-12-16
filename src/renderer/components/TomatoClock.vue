@@ -1,10 +1,14 @@
 <template>
   <div style="width: 100%; height: 100%">
     <div class="main">
-      <div class="clock" :class="{resting: clockStatus === 'resting'}">
+      <div class="clock" :class="{ resting: clockStatus === 'resting' }">
         <!-- 右半边半圆背景  -->
         <div class="pie_mod pie_right">
-          <div class="close" v-show="clockStatus !== 'init' && clockStatus !== 'resting'" @click="abandon">
+          <div
+            class="close"
+            v-show="clockStatus !== 'init' && clockStatus !== 'resting'"
+            @click="abandon"
+          >
             <i class="el-icon-circle-close"></i>
           </div>
           <!-- 右边半圆 -->
@@ -26,7 +30,23 @@
       <audio :src="clock_bg_sound" ref="audio" loop></audio>
     </div>
 
-    <div class="bottom" :hidden="clockStatus === 'timing' || clockStatus === 'interrupt'">
+    <div
+      class="bottom"
+      v-show="clockStatus !== 'timing' && clockStatus !== 'interrupt'"
+    >
+      <div class="bottom-left">
+        <i
+          class="el-icon-close-notification"
+          v-show="!clock_muted"
+          @click="changeMuted(true)"
+        ></i>
+        <i
+          class="el-icon-bell"
+          v-show="clock_muted"
+          @click="changeMuted(false)"
+        ></i>
+      </div>
+
       <el-input
         placeholder="请输入任务"
         v-model="taskName"
@@ -46,7 +66,23 @@
         </el-select>
       </el-input>
     </div>
-    <div class="bottom" :hidden="clockStatus !== 'timing' && clockStatus !== 'interrupt'">
+    <div
+      class="bottom"
+      v-show="clockStatus === 'timing' || clockStatus === 'interrupt'"
+    >
+      <div class="bottom-left">
+        <i
+          class="el-icon-close-notification"
+          v-show="!clock_muted"
+          @click="changeMuted(true)"
+        ></i>
+        <i
+          class="el-icon-bell"
+          v-show="clock_muted"
+          @click="changeMuted(false)"
+        ></i>
+      </div>
+
       <div class="interruptList">
         <el-button type="info" plain @click="clickInterrupt('上厕所')"
           >上厕所</el-button
@@ -93,6 +129,7 @@ export default {
       clock_icon: 'el-icon-video-play',
       clock_time: '25:00',
       clock_bg_sound: null, // 默认是嘀嗒
+      clock_muted: undefined,
       // render
       clockHandleId: null,
       secDeg: 0, // 每秒所占圆的度数
@@ -117,6 +154,7 @@ export default {
     },
     '$store.state.Reload.isMuted' (isMuted) { // isMuted 是否静音
       this.$refs['audio'].muted = isMuted
+      this.clock_muted = isMuted
     },
     '$store.state.Reload.reloadSound' (sound) { // 监听音频配置
       if (this.clockStatus !== 'init') { this.clockStatus = 'pending' }
@@ -197,6 +235,7 @@ export default {
     this.workTime = storage.getItem('work-time') || 25
     this.restTime = storage.getItem('rest-time') || 5
     this.$refs['audio'].muted = Boolean(storage.getItem('clock-is-muted'))
+    this.clock_muted = this.$refs['audio'].muted
     this.clock_bg_sound = require('../assets/' + (storage.getItem('clock-bg-sound') || 'dida.mp3'))
     this.clockStatus = 'init' // 执行初始化
   },
@@ -286,7 +325,8 @@ export default {
         'is_main': true,
         'begin_time': this.clockData.begin_time,
         'interrupt': this.clockData.interrupt,
-        'count': 0
+        'count': 0,
+        'sum_time': this.clockData.begin_work_time
       })
       // 清空任务名
       this.$store.dispatch('resetClockStatus')
@@ -333,6 +373,10 @@ export default {
         this.clockData.interruptStart = datetime.getTimeStamp()
       }
       this.clockData.interruptName = name
+    },
+    changeMuted (muted) {
+      this.clock_muted = muted
+      this.$refs['audio'].muted = muted
     }
 
   }
@@ -352,6 +396,9 @@ export default {
   padding-top: 1%;
   padding-left: 2%;
   padding-right: 2%;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
 }
 
 .interruptList {
@@ -359,8 +406,17 @@ export default {
   justify-content: space-around;
 }
 
+.bottom-left {
+  font-size: 24px;
+  /* color: #606266; */
+  color: rgb(30, 150, 30);
+}
+
+.bottom-left .el-icon-close-notification{
+  color: rgb(161, 46, 46);
+}
+
 .taskInput {
-  margin-left: 8%;
   width: 84%;
 }
 /*
@@ -442,17 +498,17 @@ export default {
 }
 /* 边颜色 */
 .resting .pie {
-  background-color: #6FD2B9;
+  background-color: #6fd2b9;
 }
 /* 背景颜色 */
 .resting .clock_time {
-  background-color: #3CBD9D;
+  background-color: #3cbd9d;
 }
 .resting .clock_button > i {
-  background-color: #3CBD9D;
+  background-color: #3cbd9d;
 }
 /* 进度条颜色 */
-.resting .clock_bg { 
+.resting .clock_bg {
   background-color: #009670;
 }
 </style>

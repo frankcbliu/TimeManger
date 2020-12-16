@@ -115,7 +115,7 @@ function checkAutoLaunch () {
   }
 }
 
-var settingWin, completeWin
+var settingWin, completeWin, dataStatWin
 // 设置窗口
 function openSettingWindow () {
   settingWin = new BrowserWindow({
@@ -164,6 +164,34 @@ function openCompleteWindow () {
   })
   completeWin.on('closed', () => {
     completeWin = null
+  })
+}
+
+// 统计窗口
+function opendataStatWindow () {
+  dataStatWin = new BrowserWindow({
+    title: 'TimeManager',
+    height: 600,
+    width: 900,
+    x: 200,
+    y: 100,
+    useContentSize: true,
+    skipTaskbar: true,
+    resizable: process.env.NODE_ENV === 'development',
+    webPreferences: {
+      nodeIntegration: true,
+      enableRemoteModule: true
+    }
+  })
+
+  dataStatWin.loadURL(winURL + '#/data_statistics').then(() => {
+    // win.setTitle('Prefrence')
+    // win.webContents.openDevTools({ mode: 'detach' })
+  })
+  dataStatWin.on('closed', () => {
+    dataStatWin = null
+    // 监测到窗口关闭时，再次检测
+    checkAutoLaunch()
   })
 }
 
@@ -245,6 +273,11 @@ ipcMain.on('complete', () => {
 // 放弃番茄钟，关闭
 ipcMain.on('complete-close', () => {
   completeWin.close()
+})
+
+// 开启统计数据页面
+ipcMain.on('data-statistics', () => {
+  opendataStatWindow()
 })
 
 // // 刷新时钟界面

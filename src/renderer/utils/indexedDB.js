@@ -1,4 +1,5 @@
 import datetime from './datetime.js'
+import storage from './storage'
 /**
  * indexedDB.js，浏览器本地数据库操作
  */
@@ -39,11 +40,20 @@ export default {
       return
     }
 
-    let request = this.indexedDB.open('timeManager', 2)
+    let request = this.indexedDB.open('timeManager', 3)
     let that = this
     return new Promise((resolve, reject) => {
       request.onsuccess = function (event) {
         that.db = event.target.result
+        monsole.log('当前db 版本: ', that.db.version)
+        let needUpdate = storage.getItem('need-to-update-clock')
+        if (needUpdate) {
+          // 更新番茄钟 done_date 类型
+          that.updateDoneDate()
+          storage.setItem('need-to-update-clock', false)
+        } else {
+          monsole.log('no need to update done_date')
+        }
         resolve(that.db)
       }
       request.onupgradeneeded = function (event) {
@@ -57,6 +67,7 @@ export default {
           objectStore = db.createObjectStore('task', { keyPath: 'id', autoIncrement: true })
           objectStore.createIndex('name', 'name', { unique: false }) // 主任务名
           objectStore.createIndex('tag', 'tag', { unique: false }) // 标签
+          // is_done: 0: 未完成, 1: 已完成, 2: 丢弃状态
           objectStore.createIndex('is_done', 'is_done', { unique: false }) // 是否完成
           objectStore.createIndex('tag_done', ['tag', 'is_done'], { unique: false }) // 根据标签和是否完成
           objectStore.createIndex('done_date', 'done_date', { unique: false }) // 完成日期
@@ -80,13 +91,53 @@ export default {
           objectStore.createIndex('is_main', 'is_main', { unique: false }) // 是否主任务
           objectStore.createIndex('done_date', 'done_date', { unique: false }) // 完成日期
           objectStore.createIndex('tag', 'tag', { unique: false }) // 标签
-          // 其他字段：begin_time(开始时间)、end_time(结束时间)
+          // 其他字段: begin_time(开始时间)、 end_time(结束时间)、 cost_time(花费时间)
         }
         monsole.log('------------------------结束建表------------------------')
+        storage.setItem('need-to-update-clock', true)
       }
     })
   },
 
+  // 仅用于临时更新数据库，后续版本可删除
+  async updateDoneDate () {
+    // let that = this
+    let clocks = await this.getAllClock()
+    monsole.log('尝试更新番茄钟的 done_date... 更新前的番茄钟数据: ', clocks)
+    monsole.log('当前番茄钟数量为: ', clocks.length)
+    for (let i = 0; i < clocks.length; i++) {
+      let tmp = clocks[i].done_date
+      clocks[i].done_date = typeof tmp === 'string' ? new Date(tmp) / 1000 : tmp
+      monsole.log(clocks[i].name, ' 的 done_date 由', tmp, '更改为 ', clocks[i].done_date)
+      if (clocks[i].is_main) { // 如果是主任务
+        let r = await this.getTaskById(clocks[i].task_id)
+        clocks[i].cost_time = r.sum_time
+        monsole.log('主任务花费时间: ', clocks[i].cost_time, 'min')
+      } else {
+        clocks[i].cost_time = Math.round((new Date(clocks[i].end_time) - new Date(clocks[i].begin_time)) / 1000 / 60)
+        monsole.log('子任务花费时间: ', clocks[i].cost_time, 'min')
+      }
+      // 把更新过的对象放回数据库
+      let objectStore = this.db.transaction(['clock'], 'readwrite').objectStore('clock')
+      let request = objectStore.get(clocks[i].clock_id)
+
+      request.onerror = function (event) {
+        monsole.log(new Error('根据id获取数据失败'))
+      }
+      request.onsuccess = function (event) {
+        // var data = event.target.result
+
+        // 把更新过的对象放回数据库
+        var requestUpdate = objectStore.put(clocks[i])
+        requestUpdate.onerror = function (event) {
+          monsole.log(new Error('更新数据失败'))
+        }
+        requestUpdate.onsuccess = function (event) {
+          monsole.log(clocks[i].clock_id, '数据更新成功...')
+        }
+      }
+    }
+  },
   clear () {
     // if (process.env.NODE_ENV === 'development') {
     var req = window.indexedDB.deleteDatabase('timeManager')
@@ -129,12 +180,13 @@ export default {
   },
 
   // 创建番茄钟
-  createClock (data) {
-    monsole.log('createClock: data: ', JSON.stringify(data))
+  async createClock (data) {
     // 结束时间
     data['end_time'] = datetime.getNowDateTime()
-    data['done_date'] = datetime.getNowDate()
-    return this.db_add('clock', data)
+    data['done_date'] = datetime.getTimeStamp()
+    monsole.log('createClock: data: ', JSON.stringify(data))
+    let id = await this.db_add('clock', data)
+    return id
   },
 
   /**********************************************************************
@@ -275,6 +327,37 @@ export default {
     return new Promise((resolve, reject) => {
       request.onerror = function (event) {
         reject(new Error('根据主任务id获取子任务失败'))
+      }
+      request.onsuccess = function (event) {
+        resolve(request.result || [])
+      }
+    })
+  },
+
+  /**
+   * 根据主任务 id 获取主任务
+   * @param {Number} id id
+   */
+  getTaskById (id) {
+    let objectStore = this.db.transaction(['task']).objectStore('task')
+    let request = objectStore.get(id)
+    return new Promise((resolve, reject) => {
+      request.onerror = function (event) {
+        reject(new Error('根据主任务 id 获取主任务失败'))
+      }
+      request.onsuccess = function (event) {
+        resolve(request.result || {})
+      }
+    })
+  },
+
+  async getAllClock () { // 获取所有番茄钟
+    let objectStore = this.db.transaction(['clock'], 'readwrite').objectStore('clock')
+    let request = objectStore.getAll()
+
+    return new Promise((resolve, reject) => {
+      request.onerror = function (event) {
+        reject(new Error('获取所有番茄钟失败'))
       }
       request.onsuccess = function (event) {
         resolve(request.result || [])

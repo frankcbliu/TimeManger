@@ -294,12 +294,14 @@ export default {
       this.$store.dispatch('resetClockStatus')
       ipcRenderer.send('complete-close')
     },
+
     async createClock () { // 创建番茄钟记录
       await this.createOrBindClock()
       this.$store.dispatch('resetClockStatus')
       this.$store.dispatch('resetTomatoClockNum')
       ipcRenderer.send('complete-close')
     },
+
     async createOrBindClock () {
       let { type: clockType, value: id } = this.operate
       monsole.log('operate: ', JSON.stringify(this.operate))
@@ -320,7 +322,8 @@ export default {
           'task_id': subId,
           'is_main': false,
           'begin_time': that.clockData.begin_time,
-          'interrupt': that.clockData.interrupt
+          'interrupt': that.clockData.interrupt,
+          'cost_time': that.clockData.begin_work_time
         })
       } else if (clockType === 'bind_task') { // 绑定主任务
         // 更改番茄钟数量、总用时
@@ -333,7 +336,8 @@ export default {
             'task_id': id,
             'is_main': true,
             'begin_time': that.clockData.begin_time,
-            'interrupt': that.clockData.interrupt
+            'interrupt': that.clockData.interrupt,
+            'cost_time': that.clockData.begin_work_time
           }).then((res) => {
           })
         })
@@ -346,7 +350,8 @@ export default {
           'task_id': id,
           'is_main': false,
           'begin_time': that.clockData.begin_time,
-          'interrupt': that.clockData.interrupt
+          'interrupt': that.clockData.interrupt,
+          'cost_time': that.clockData.begin_work_time
         })
       } else { // if (clockType === 'new_task') { // 创建主任务
         // 先创建主任务
@@ -363,7 +368,8 @@ export default {
           'task_id': taskId,
           'is_main': true,
           'begin_time': that.clockData.begin_time,
-          'interrupt': that.clockData.interrupt
+          'interrupt': that.clockData.interrupt,
+          'cost_time': that.clockData.begin_work_time
         })
         monsole.log('默认创建主任务 res: ', JSON.stringify(res))
       }
@@ -420,7 +426,10 @@ body {
   overflow-y: scroll;
 }
 .taskName {
+  display: inline-block;
   font-size: 16px;
+  width: 150px;
+  word-wrap: break-word;
 }
 .todoTask {
   padding: 5px;

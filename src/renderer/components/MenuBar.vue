@@ -273,7 +273,11 @@
         <tomato-clock />
       </div>
       <div id="bottom">
-        <div></div>
+        <span style="margin: 1%; font-size: 25px" >
+
+          <i class="el-icon-notebook-2" style="color: #606266" v-show="false"></i>
+          <i class="el-icon-pie-chart" style="color: #606266" @click="openData" v-show="false"></i>
+        </span>
         <span style="margin: 1%; font-size: 25px" @click="openSetting">
           <i class="el-icon-setting" style="color: #606266"></i>
         </span>
@@ -596,12 +600,26 @@ export default {
       this.$store.dispatch('updateTodoSubTasksSort', this.todoSubTasksSort)
       // storage.setItem('todo-sub-tasks-sort', this.todoSubTasksSort) // 更新缓存
     },
+
+    async abandonTask (id) { // 放弃任务
+      await db.setTaskParam(id, { is_done: 2 })
+    },
+
     /**
      * 点击主任务的···
      */
     taskExpand (id, isDone, subTasks) {
       let that = this
       const menu = new Menu()
+      menu.append(
+        new MenuItem({
+          label: '置顶',
+          click: function () {
+            monsole.log('点击置顶')
+            that.init()
+          }
+        })
+      )
       menu.append(
         new MenuItem({
           label: '删除',
@@ -616,6 +634,21 @@ export default {
             for (let subItem of subTasks) {
               // 删除所有子任务
               db.deleteSubTask(subItem.sub_id)
+            }
+            that.init()
+          }
+        })
+      )
+      menu.append(
+        new MenuItem({
+          label: '丢弃任务', // 某个任务虽然未完成，但也不需要继续完成了
+          click: function () {
+            that.abandonTask(id) // 丢弃主任务
+            if (!isDone) {
+              // 未完成
+              // 删除缓存
+              that.todoTasksSort = that.removeArrValue(that.todoTasksSort, id) // 删除缓存里的id
+              that.$store.dispatch('updateTodoTasksSort', that.todoTasksSort)
             }
             that.init()
           }
@@ -666,6 +699,10 @@ export default {
       )
       // 展示出来
       menu.popup(remote.getCurrentWindow())
+    },
+
+    openData () { // 点击打开统计页面
+      ipcRenderer.send('data-statistics')
     },
 
     openSetting () {
@@ -805,6 +842,9 @@ export default {
   font-size: 20px;
   font-weight: bold;
   color: #606266;
+  display: inline-block;
+  width: 220px;
+  word-wrap : break-word;
 }
 .taskTopRight {
   display: flex;

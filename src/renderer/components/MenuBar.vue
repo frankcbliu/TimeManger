@@ -273,10 +273,18 @@
         <tomato-clock />
       </div>
       <div id="bottom">
-        <span style="margin: 1%; font-size: 25px" >
-
-          <i class="el-icon-notebook-2" style="color: #606266" v-show="false"></i>
-          <i class="el-icon-pie-chart" style="color: #606266" @click="openData" v-show="false"></i>
+        <span style="margin: 1%; font-size: 25px">
+          <i
+            class="el-icon-notebook-2"
+            style="color: #606266"
+            v-show="false"
+          ></i>
+          <i
+            class="el-icon-pie-chart"
+            style="color: #606266"
+            @click="openData"
+            v-show="false"
+          ></i>
         </span>
         <span style="margin: 1%; font-size: 25px" @click="openSetting">
           <i class="el-icon-setting" style="color: #606266"></i>
@@ -616,7 +624,12 @@ export default {
           label: '置顶',
           click: function () {
             monsole.log('点击置顶')
-            that.init()
+            let list = storage.getItem('todo-tasks-sort')
+            let idx = list.indexOf(id)
+            list = list.slice(0, idx).concat(list.slice(idx + 1, list.length))
+            list.unshift(id)
+            storage.setItem('todo-tasks-sort', list)
+            that.$store.dispatch('updateTodoTasksSort', list)
           }
         })
       )
@@ -726,17 +739,16 @@ export default {
             }
           })
         )
-        menu.append(
-          new MenuItem({
-            label: '清空缓存',
-            click: function () {
-              db.clear()
-              storage.clear()
-            }
-          })
-        )
       }
-
+      menu.append(
+        new MenuItem({
+          label: '清空缓存',
+          click: function () {
+            db.clear()
+            storage.clear()
+          }
+        })
+      )
       menu.append(
         new MenuItem({
           label: '退出',
@@ -844,7 +856,7 @@ export default {
   color: #606266;
   display: inline-block;
   width: 220px;
-  word-wrap : break-word;
+  word-wrap: break-word;
 }
 .taskTopRight {
   display: flex;

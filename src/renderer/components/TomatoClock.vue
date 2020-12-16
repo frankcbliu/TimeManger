@@ -36,12 +36,12 @@
     >
       <div class="bottom-left">
         <i
-          class="el-icon-close-notification"
+          class="el-icon-bell"
           v-show="!clock_muted"
           @click="changeMuted(true)"
         ></i>
         <i
-          class="el-icon-bell"
+          class="el-icon-close-notification"
           v-show="clock_muted"
           @click="changeMuted(false)"
         ></i>
@@ -72,12 +72,12 @@
     >
       <div class="bottom-left">
         <i
-          class="el-icon-close-notification"
+          class="el-icon-bell"
           v-show="!clock_muted"
           @click="changeMuted(true)"
         ></i>
         <i
-          class="el-icon-bell"
+          class="el-icon-close-notification"
           v-show="clock_muted"
           @click="changeMuted(false)"
         ></i>
